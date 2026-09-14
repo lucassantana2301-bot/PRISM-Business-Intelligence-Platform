@@ -1,6 +1,9 @@
+'use client';
+
 import React from 'react';
-import { TrendBadge } from './Badges';
+import { TrendingUp, TrendingDown } from 'lucide-react';
 import { Skeleton } from './Controls';
+import clsx from 'clsx';
 
 export interface MetricCardProps {
   label: string;
@@ -9,106 +12,116 @@ export interface MetricCardProps {
   comparisonLabel?: string;
   isFavorable?: boolean;
   sparklineData?: number[];
+  sparklineColor?: string;
+  iconColor?: string;
+  iconBg?: string;
   loading?: boolean;
   icon?: React.ComponentType<{ className?: string }>;
-  prefix?: string;
 }
 
 export const MetricCard: React.FC<MetricCardProps> = ({
   label,
   value,
   delta = null,
-  comparisonLabel = 'vs previous period',
+  comparisonLabel = 'em comparação com os 30 dias anteriores',
   isFavorable = true,
-  sparklineData = [35, 42, 38, 48, 45, 56, 52, 64, 58, 70],
+  sparklineData = [20, 32, 28, 45, 36, 52, 48, 65, 58, 72],
+  sparklineColor,
+  iconColor = 'text-blue-600',
+  iconBg = 'bg-blue-50',
   loading = false,
   icon: Icon,
 }) => {
   if (loading) {
     return (
-      <div className="p-5 rounded-lg bg-prism-bg-card border border-prism-border-subtle space-y-3">
+      <div className="p-6 rounded-2xl bg-white border border-slate-100 shadow-xs space-y-4">
         <div className="flex items-center justify-between">
-          <Skeleton className="h-4 w-24" />
-          <Skeleton className="h-5 w-5 rounded-full" />
+          <Skeleton className="h-4 w-28 bg-slate-100" />
+          <Skeleton className="h-8 w-8 rounded-xl bg-slate-100" />
         </div>
-        <Skeleton className="h-8 w-32" />
+        <Skeleton className="h-9 w-40 bg-slate-100" />
         <div className="flex items-center justify-between pt-2">
-          <Skeleton className="h-4 w-16" />
-          <Skeleton className="h-4 w-24" />
+          <Skeleton className="h-5 w-20 rounded-md bg-slate-100" />
+          <Skeleton className="h-6 w-20 bg-slate-100" />
         </div>
       </div>
     );
   }
 
-  // Generate lightweight SVG path for sparkline
+  // Generate smooth SVG polyline/path for sparkline
   const min = Math.min(...sparklineData);
   const max = Math.max(...sparklineData);
   const range = max - min || 1;
-  const width = 100;
-  const height = 28;
+  const width = 110;
+  const height = 36;
   const step = width / (sparklineData.length - 1);
 
   const points = sparklineData
     .map((val, idx) => {
       const x = (idx * step).toFixed(1);
-      const y = (height - ((val - min) / range) * (height - 6) - 3).toFixed(1);
+      const y = (height - ((val - min) / range) * (height - 8) - 4).toFixed(1);
       return `${x},${y}`;
     })
     .join(' ');
 
-  const strokeColor = delta !== null && delta < 0 && isFavorable
-    ? '#EF4444' // red
-    : '#3B82F6'; // prism blue
+  const isPositive = delta !== null && delta >= 0;
+  const effectiveStrokeColor = sparklineColor || (isPositive ? '#8b5cf6' : '#f59e0b');
 
   return (
-    <div className="p-5 rounded-xl bg-prism-bg-card border border-prism-border-subtle hover:border-prism-border-hover transition-all duration-200 relative overflow-hidden group shadow-prism-card hover:shadow-prism-elevated">
-      {/* Top row: Label & Icon */}
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-xs font-medium text-prism-text-secondary tracking-wide uppercase font-mono">
-          {label}
-        </span>
-        {Icon && (
-          <div className="p-1.5 rounded-lg bg-prism-bg-elevated border border-prism-border-subtle text-prism-text-muted group-hover:text-prism-text-primary group-hover:border-prism-border-hover transition-all" aria-hidden="true">
-            <Icon className="w-3.5 h-3.5" />
-          </div>
-        )}
-      </div>
-
-      {/* Primary Value */}
-      <div className="flex items-baseline justify-between mb-3">
-        <span className="text-2xl sm:text-3xl font-mono font-semibold tracking-tight text-prism-text-primary">
-          {value}
-        </span>
-      </div>
-
-      {/* Bottom row: Trend Delta + Sparkline */}
-      <div className="flex items-center justify-between pt-2 border-t border-prism-border-subtle/50">
-        <div className="flex items-center gap-2 flex-wrap min-w-0">
-          {delta !== null && (
-            <TrendBadge
-              delta={delta}
-              isFavorable={isFavorable}
-              size="sm"
-            />
-          )}
-          <span className="text-[11px] text-prism-text-muted font-mono truncate">
-            {comparisonLabel}
+    <div className="p-6 rounded-2xl bg-white border border-slate-100/90 shadow-xs hover:shadow-md transition-all duration-200 flex flex-col justify-between group">
+      <div>
+        {/* Top row: Label & Colored Icon */}
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-[11px] font-bold text-slate-500 tracking-wider uppercase font-sans">
+            {label}
           </span>
+          {Icon && (
+            <div className={clsx('p-2 rounded-xl flex items-center justify-center transition-transform group-hover:scale-105', iconBg, iconColor)}>
+              <Icon className="w-4 h-4" />
+            </div>
+          )}
         </div>
 
-        {/* Micro Sparkline */}
-        <div className="w-20 h-7 shrink-0 opacity-80 group-hover:opacity-100 transition-opacity" aria-hidden="true">
+        {/* Primary Value */}
+        <div className="mb-4">
+          <span className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 font-sans">
+            {value}
+          </span>
+        </div>
+      </div>
+
+      {/* Bottom row: Delta Pill & Sparkline */}
+      <div className="flex items-end justify-between gap-2 pt-2">
+        <div className="space-y-1.5 min-w-0">
+          {delta !== null && (
+            <div
+              className={clsx(
+                'inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-semibold font-sans',
+                isPositive
+                  ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
+                  : 'bg-rose-50 text-rose-600 border border-rose-100'
+              )}
+            >
+              {isPositive ? (
+                <TrendingUp className="w-3.5 h-3.5" />
+              ) : (
+                <TrendingDown className="w-3.5 h-3.5" />
+              )}
+              <span>{isPositive ? `+${delta.toFixed(1)}%` : `${delta.toFixed(1)}%`}</span>
+            </div>
+          )}
+          <div className="text-[10px] text-slate-400 font-sans truncate">
+            {comparisonLabel}
+          </div>
+        </div>
+
+        {/* Dynamic Micro Sparkline */}
+        <div className="w-24 h-9 shrink-0" aria-hidden="true">
           <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full overflow-visible">
-            <defs>
-              <linearGradient id={`grad-${label.replace(/\s+/g, '')}`} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={strokeColor} stopOpacity="0.25" />
-                <stop offset="100%" stopColor={strokeColor} stopOpacity="0.0" />
-              </linearGradient>
-            </defs>
             <polyline
               fill="none"
-              stroke={strokeColor}
-              strokeWidth="2"
+              stroke={effectiveStrokeColor}
+              strokeWidth="2.5"
               strokeLinecap="round"
               strokeLinejoin="round"
               points={points}
@@ -119,3 +132,4 @@ export const MetricCard: React.FC<MetricCardProps> = ({
     </div>
   );
 };
+

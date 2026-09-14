@@ -1,15 +1,12 @@
 'use client';
 
 import React from 'react';
-import { usePathname } from 'next/navigation';
 import {
   Search,
-  Command,
   Bell,
   Menu,
-  ChevronRight,
-  User,
   Calendar,
+  ChevronDown,
 } from 'lucide-react';
 
 export interface TopbarProps {
@@ -21,97 +18,64 @@ export const Topbar: React.FC<TopbarProps> = ({
   onOpenCommandPalette,
   onMobileMenuToggle,
 }) => {
-  const pathname = usePathname();
-
-  const getBreadcrumbs = (path: string) => {
-    switch (path) {
-      case '/analytics':
-        return ['Workspace', 'Acme E-Commerce', 'Dimensional Analytics'];
-      case '/explorer':
-        return ['Workspace', 'Acme E-Commerce', 'Data Explorer'];
-      case '/insights':
-        return ['Workspace', 'Acme E-Commerce', 'Insights & Anomalies'];
-      case '/ask':
-        return ['Workspace', 'Acme E-Commerce', 'Ask PRISM'];
-      case '/sources':
-        return ['Workspace', 'Acme E-Commerce', 'Data Sources & Warehouses'];
-      default:
-        return ['Workspace', 'Acme E-Commerce', 'Executive Overview'];
-    }
-  };
-
-  const breadcrumbs = getBreadcrumbs(pathname);
-
   return (
-    <header className="h-14 border-b border-prism-border-subtle bg-prism-bg-canvas/90 backdrop-blur-md sticky top-0 z-30 px-4 sm:px-6 flex items-center justify-between gap-4">
-      {/* Left: Mobile hamburger & Breadcrumbs */}
-      <div className="flex items-center gap-3 min-w-0">
+    <header className="h-16 border-b border-slate-200/80 bg-white/95 backdrop-blur-md sticky top-0 z-30 px-6 flex items-center justify-between gap-4">
+      {/* Left: Mobile hamburger */}
+      <div className="flex items-center gap-3">
         <button
           type="button"
           onClick={onMobileMenuToggle}
-          className="lg:hidden p-1.5 rounded-md bg-prism-bg-card border border-prism-border-subtle text-prism-text-muted hover:text-prism-text-primary"
-          title="Toggle Navigation"
-          aria-label="Toggle navigation"
+          className="p-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+          title="Alternar Navegação"
+          aria-label="Alternar navegação"
         >
           <Menu className="w-4 h-4" />
         </button>
-
-        {/* Breadcrumb Path */}
-        <nav className="flex items-center gap-1.5 text-xs font-mono text-prism-text-muted truncate">
-          {breadcrumbs.map((crumb, idx) => {
-            const isLast = idx === breadcrumbs.length - 1;
-            return (
-              <React.Fragment key={crumb}>
-                {idx > 0 && <ChevronRight className="w-3 h-3 text-prism-border-hover shrink-0" />}
-                <span
-                  className={
-                    isLast
-                      ? 'text-prism-text-primary font-medium truncate'
-                      : 'hover:text-prism-text-secondary cursor-default truncate hidden sm:inline'
-                  }
-                >
-                  {crumb}
-                </span>
-              </React.Fragment>
-            );
-          })}
-        </nav>
       </div>
 
-      {/* Right: Actions, Date Picker, Command Palette, Profile */}
-      <div className="flex items-center gap-2.5 shrink-0">
-        {/* Command Palette Trigger */}
+      {/* Center: Search & Ask Input */}
+      <div className="flex-1 max-w-xl mx-auto">
         <button
           type="button"
           onClick={onOpenCommandPalette}
-          className="flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-prism-bg-card border border-prism-border-subtle hover:border-prism-border-hover text-xs text-prism-text-muted hover:text-prism-text-secondary transition-colors group"
+          className="w-full flex items-center justify-between px-3.5 py-2 rounded-xl bg-slate-50 hover:bg-slate-100/80 border border-slate-200/80 text-xs text-slate-500 hover:text-slate-700 transition-all group shadow-sm"
         >
-          <Search className="w-3.5 h-3.5 text-prism-text-muted group-hover:text-prism-text-secondary" />
-          <span className="hidden md:inline font-sans text-xs">Search or jump to...</span>
-          <div className="flex items-center gap-0.5 px-1.5 py-0.2 rounded bg-prism-bg-elevated border border-prism-border-subtle text-[10px] font-mono text-prism-text-muted">
-            <Command className="w-2.5 h-2.5" />
+          <div className="flex items-center gap-2.5">
+            <Search className="w-4 h-4 text-slate-400 group-hover:text-blue-600 transition-colors" />
+            <span className="font-sans text-xs">Pesquisar ou perguntar algo ao PRISM...</span>
+          </div>
+          <div className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-white border border-slate-200 text-[10px] font-mono text-slate-500 shadow-2xs font-semibold">
+            <span>⌘</span>
             <span>K</span>
           </div>
         </button>
+      </div>
 
-        {pathname !== '/ask' && (
-          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-md bg-prism-bg-card border border-prism-border-subtle text-xs font-mono text-prism-text-secondary" aria-label="Preview period: Last 30 Days">
-            <Calendar className="w-3.5 h-3.5" aria-hidden="true" />
-            <span>Last 30 Days</span>
-            <span className="text-prism-text-muted">Preview</span>
-          </div>
-        )}
+      {/* Right: Date Range Dropdown, Notifications & User Avatar */}
+      <div className="flex items-center gap-3 shrink-0">
+        {/* Date Preset Dropdown Pill */}
+        <div className="hidden sm:flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-xs text-slate-700 font-medium shadow-xs hover:border-slate-300 transition-colors cursor-pointer">
+          <Calendar className="w-3.5 h-3.5 text-slate-500" />
+          <span>Últimos 30 dias</span>
+          <ChevronDown className="w-3 h-3 text-slate-400 ml-0.5" />
+        </div>
 
-        {/* Notifications Icon */}
-        <button type="button" disabled aria-label="Notifications coming soon" title="Notifications coming soon" className="p-1.5 rounded-md bg-prism-bg-card border border-prism-border-subtle text-prism-text-muted opacity-50 cursor-not-allowed relative">
+        {/* Notifications Icon Button */}
+        <button
+          type="button"
+          aria-label="Notificações"
+          title="Notificações"
+          className="p-2 rounded-xl bg-white border border-slate-200 hover:border-slate-300 text-slate-600 hover:text-slate-900 transition-colors relative shadow-xs"
+        >
           <Bell className="w-4 h-4" />
         </button>
 
-        {/* User Profile Avatar */}
-        <div className="h-7 w-7 rounded-full bg-prism-bg-elevated border border-prism-border-subtle flex items-center justify-center text-prism-text-secondary text-xs font-mono font-medium">
-          <User className="w-3.5 h-3.5" />
+        {/* User Avatar Circle */}
+        <div className="h-9 w-9 rounded-full bg-[#0d1322] border border-slate-700 flex items-center justify-center text-white text-xs font-semibold shadow-xs">
+          <span>A</span>
         </div>
       </div>
     </header>
   );
 };
+

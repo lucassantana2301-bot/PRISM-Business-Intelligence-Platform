@@ -10,10 +10,9 @@ import {
   ResponsiveContainer,
   CartesianGrid,
 } from 'recharts';
-import { ChartCard } from '@/components/ui/ChartCard';
-import { SegmentedControl } from '@/components/ui/Controls';
 import { TimeGrain } from '@/lib/contracts/analytics';
 import { formatCurrency, formatInteger } from '@/lib/utils/formatters';
+import clsx from 'clsx';
 
 export interface TrendDataPoint {
   timestamp: string;
@@ -39,136 +38,152 @@ export const RevenueTrendCard: React.FC<RevenueTrendCardProps> = ({
 }) => {
   const [metricView, setMetricView] = useState<'revenue' | 'orders'>('revenue');
 
-  // Find peak
-  let peakVal = 0;
-  let peakDate = '';
-  data.forEach((d) => {
-    const val = metricView === 'revenue' ? d.net_revenue : d.orders;
-    if (val > peakVal) {
-      peakVal = val;
-      peakDate = d.date || d.timestamp;
-    }
-  });
+  const grainLabels: Record<TimeGrain, string> = {
+    day: 'dia',
+    week: 'semana',
+    month: 'mês',
+    quarter: 'trimestre',
+    year: 'ano',
+  };
+
 
   return (
-    <ChartCard
-      title="Revenue & Growth Trajectory"
-      subtitle={`Canonical time-series aggregated by ${timeGrain}`}
-      actions={
-        <div className="flex items-center gap-2">
+    <div className="p-6 rounded-2xl bg-white border border-slate-100 shadow-xs flex flex-col justify-between">
+      {/* Header with Title & Granularity / Metric Toggles */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <div>
+          <h3 className="text-base font-bold text-slate-900 font-sans">
+            Receita e trajetória de crescimento
+          </h3>
+          <p className="text-xs text-slate-500 font-sans mt-0.5">
+            Séries temporais canônicas agregadas por {grainLabels[timeGrain]}
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2.5 flex-wrap">
           {/* Time Grain selector */}
-          <SegmentedControl
-            options={[
-              { id: 'day', label: 'Day' },
-              { id: 'week', label: 'Week' },
-              { id: 'month', label: 'Month' },
-            ]}
-            value={timeGrain}
-            onChange={(val) => onTimeGrainChange(val as TimeGrain)}
-            size="sm"
-          />
+          <div className="inline-flex p-1 rounded-xl bg-slate-100/80 border border-slate-200/60">
+            {[
+              { id: 'day', label: 'Dia' },
+              { id: 'week', label: 'Semana' },
+              { id: 'month', label: 'Mês' },
+            ].map((opt) => (
+              <button
+                key={opt.id}
+                type="button"
+                onClick={() => onTimeGrainChange(opt.id as TimeGrain)}
+                className={clsx(
+                  'px-3 py-1 text-xs font-semibold rounded-lg transition-all',
+                  timeGrain === opt.id
+                    ? 'bg-blue-600 text-white shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                )}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
 
           {/* Metric toggle */}
-          <SegmentedControl
-            options={[
-              { id: 'revenue', label: 'Revenue' },
-              { id: 'orders', label: 'Orders' },
-            ]}
-            value={metricView}
-            onChange={(val) => setMetricView(val as 'revenue' | 'orders')}
-            size="sm"
-          />
-        </div>
-      }
-      footer={
-        <>
-          <div className="flex items-center gap-4 text-xs font-mono">
-            <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-sm bg-prism-accent-blue" />
-              <span>
-                {metricView === 'revenue' ? 'Net Revenue ($)' : 'Completed Orders'}
-              </span>
-            </div>
+          <div className="inline-flex p-1 rounded-xl bg-slate-100/80 border border-slate-200/60">
+            {[
+              { id: 'revenue', label: 'Receita' },
+              { id: 'orders', label: 'Pedidos' },
+            ].map((opt) => (
+              <button
+                key={opt.id}
+                type="button"
+                onClick={() => setMetricView(opt.id as 'revenue' | 'orders')}
+                className={clsx(
+                  'px-3 py-1 text-xs font-semibold rounded-lg transition-all',
+                  metricView === opt.id
+                    ? 'bg-blue-600 text-white shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                )}
+              >
+                {opt.label}
+              </button>
+            ))}
           </div>
-          {peakVal > 0 && (
-            <span className="text-xs font-mono text-prism-text-secondary">
-              Peak:{' '}
-              <strong className="text-prism-text-primary">
-                {metricView === 'revenue' ? formatCurrency(peakVal, true) : formatInteger(peakVal)}
-              </strong>{' '}
-              ({peakDate})
-            </span>
-          )}
-        </>
-      }
-    >
-      <div className="h-64 w-full">
+        </div>
+      </div>
+
+      {/* Chart Area */}
+      <div className="h-72 w-full">
         {isLoading ? (
-          <div className="h-full w-full flex items-center justify-center animate-pulse bg-prism-bg-card/40 rounded">
-            <span className="text-xs font-mono text-prism-text-muted">Loading aggregated trajectory...</span>
+          <div className="h-full w-full flex items-center justify-center animate-pulse bg-slate-50 rounded-xl">
+            <span className="text-xs font-sans text-slate-400">Carregando dados agregados...</span>
           </div>
         ) : data.length === 0 ? (
-          <div className="h-full flex items-center justify-center text-xs text-prism-text-muted">
-            No trajectory data in selected period
+          <div className="h-full flex items-center justify-center text-xs text-slate-400 font-sans">
+            Nenhum dado de trajetória no período selecionado
           </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={data} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
+            <AreaChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
               <defs>
-                <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.35} />
-                  <stop offset="95%" stopColor="#3B82F6" stopOpacity={0.0} />
+                <linearGradient id="execRevenueGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#2563eb" stopOpacity={0.25} />
+                  <stop offset="95%" stopColor="#2563eb" stopOpacity={0.0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1E2230" vertical={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
               <XAxis
                 dataKey="date"
-                stroke="#8A99AD"
-                fontSize={10}
+                stroke="#94a3b8"
+                fontSize={11}
                 tickLine={false}
-                axisLine={{ stroke: '#232733' }}
+                axisLine={{ stroke: '#e2e8f0' }}
                 tickFormatter={(d) => {
-                  if (timeGrain === 'month') return d.substring(0, 7);
-                  if (timeGrain === 'week') return d.substring(5);
-                  return d.substring(5);
+                  if (!d) return '';
+                  const parts = d.split('-');
+                  if (parts.length === 3) {
+                    const day = parseInt(parts[2], 10);
+                    return `${day} out`;
+                  }
+                  return d;
                 }}
               />
               <YAxis
-                stroke="#8A99AD"
-                fontSize={10}
+                stroke="#94a3b8"
+                fontSize={11}
                 tickLine={false}
-                axisLine={{ stroke: '#232733' }}
+                axisLine={{ stroke: '#e2e8f0' }}
                 tickFormatter={(val) =>
-                  metricView === 'revenue' ? formatCurrency(val, true) : `${val}`
+                  metricView === 'revenue' ? `$${(val / 1000).toFixed(1)}k` : `${val}`
                 }
               />
               <Tooltip
                 formatter={(val: any) => [
                   metricView === 'revenue' ? formatCurrency(Number(val)) : formatInteger(Number(val)),
-                  metricView === 'revenue' ? 'Net Revenue' : 'Orders',
+                  metricView === 'revenue' ? 'Receita' : 'Pedidos',
                 ]}
-                labelFormatter={(l) => `Date: ${l}`}
+                labelFormatter={(l) => `${l}`}
                 contentStyle={{
-                  backgroundColor: '#11131A',
-                  borderColor: '#363D4F',
-                  borderRadius: '8px',
+                  backgroundColor: '#ffffff',
+                  borderColor: '#e2e8f0',
+                  borderRadius: '12px',
+                  boxShadow: '0 4px 12px rgba(15, 23, 42, 0.08)',
                   fontSize: '12px',
-                  color: '#F8FAFC',
-                  fontFamily: 'monospace',
+                  color: '#0f172a',
+                  fontWeight: '600',
+                  padding: '8px 12px',
                 }}
               />
               <Area
                 type="monotone"
                 dataKey={metricView === 'revenue' ? 'net_revenue' : 'orders'}
-                stroke="#3B82F6"
-                strokeWidth={2}
+                stroke="#2563eb"
+                strokeWidth={2.5}
                 fillOpacity={1}
-                fill="url(#revenueGradient)"
+                fill="url(#execRevenueGradient)"
+                activeDot={{ r: 6, fill: '#2563eb', stroke: '#ffffff', strokeWidth: 2 }}
               />
             </AreaChart>
           </ResponsiveContainer>
         )}
       </div>
-    </ChartCard>
+    </div>
   );
 };
+

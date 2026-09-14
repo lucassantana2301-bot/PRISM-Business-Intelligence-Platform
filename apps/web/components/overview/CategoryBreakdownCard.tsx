@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import { ChartCard } from '@/components/ui/ChartCard';
 import { formatCurrency } from '@/lib/utils/formatters';
 
 export interface CategoryDataRow {
@@ -18,68 +17,80 @@ interface CategoryBreakdownCardProps {
   isLoading?: boolean;
 }
 
+const CATEGORY_COLORS: Record<string, string> = {
+  'Electronics': '#2563eb', // blue
+  'Eletrônica': '#2563eb',
+  'Home & Kitchen': '#0d9488', // teal
+  'Casa e Decoração': '#0d9488',
+  'Apparel': '#8b5cf6', // purple
+  'Roupas e Acessórios': '#8b5cf6',
+  'Beauty': '#f59e0b', // amber
+  'Beleza e Saúde': '#f59e0b',
+  'Sports': '#84cc16', // lime/olive
+  'Esporte e Lazer': '#84cc16',
+  'Other': '#64748b', // slate
+  'Outros': '#64748b',
+};
+
 export const CategoryBreakdownCard: React.FC<CategoryBreakdownCardProps> = ({
   data,
   isLoading = false,
 }) => {
-  const topCategory = data.length > 0 ? data[0] : null;
-
   return (
-    <ChartCard
-      title="Revenue by Category"
-      subtitle="Canonical gross revenue distribution across departments"
-      footer={
-        topCategory ? (
-          <div className="flex items-center justify-between w-full text-xs">
-            <span>
-              Top: <strong className="text-prism-text-primary">{topCategory.name}</strong> (
-              {formatCurrency(topCategory.revenue, true)})
-            </span>
-            <span className="text-prism-accent-blue font-mono">{topCategory.share}% share</span>
-          </div>
-        ) : (
-          <span>No category data available</span>
-        )
-      }
-    >
-      <div className="h-64 w-full flex flex-col justify-between">
+    <div className="p-6 rounded-2xl bg-white border border-slate-100 shadow-xs flex flex-col justify-between h-full">
+      {/* Header */}
+      <div className="mb-4">
+        <h3 className="text-base font-bold text-slate-900 font-sans">
+          Receita por categoria
+        </h3>
+        <p className="text-xs text-slate-500 font-sans mt-0.5">
+          Distribuição canônica da receita bruta entre os departamentos
+        </p>
+      </div>
+
+      {/* Progress Bars List */}
+      <div className="flex-1 flex flex-col justify-around min-h-[240px]">
         {isLoading ? (
-          <div className="space-y-4 pt-3 animate-pulse">
+          <div className="space-y-4 animate-pulse">
             {[1, 2, 3, 4, 5].map((i) => (
               <div key={i} className="space-y-1.5">
-                <div className="h-3 bg-prism-bg-elevated rounded w-1/3" />
-                <div className="h-2 bg-prism-bg-elevated rounded w-full" />
+                <div className="h-3.5 bg-slate-100 rounded w-1/3" />
+                <div className="h-2.5 bg-slate-100 rounded-full w-full" />
               </div>
             ))}
           </div>
         ) : data.length === 0 ? (
-          <div className="h-full flex items-center justify-center text-xs text-prism-text-muted">
-            No category revenue in selected range
+          <div className="h-full flex items-center justify-center text-xs text-slate-400 font-sans">
+            Nenhuma receita de categoria no período
           </div>
         ) : (
-          <div className="space-y-3 pt-1 overflow-y-auto pr-1">
-            {data.map((cat) => (
-              <div key={cat.category} className="space-y-1">
-                <div className="flex items-center justify-between text-xs font-mono">
-                  <span className="text-prism-text-secondary truncate">{cat.name}</span>
-                  <span className="text-prism-text-primary font-medium">
-                    {formatCurrency(cat.revenue, true)} ({cat.share}%)
-                  </span>
+          <div className="space-y-3.5">
+            {data.map((cat, idx) => {
+              const barColor = cat.color || CATEGORY_COLORS[cat.name] || CATEGORY_COLORS[cat.category] || '#2563eb';
+              return (
+                <div key={cat.category || idx} className="space-y-1.5">
+                  <div className="flex items-center justify-between text-xs font-sans">
+                    <span className="text-slate-700 font-semibold truncate">{cat.name}</span>
+                    <span className="text-slate-900 font-bold font-sans">
+                      US$ {(cat.revenue / 1000).toFixed(1)} mil <span className="text-slate-500 font-normal">({cat.share}%)</span>
+                    </span>
+                  </div>
+                  <div className="w-full h-2 rounded-full bg-slate-100 overflow-hidden">
+                    <div
+                      className="h-full rounded-full transition-all duration-500"
+                      style={{
+                        width: `${Math.min(cat.share, 100)}%`,
+                        backgroundColor: barColor,
+                      }}
+                    />
+                  </div>
                 </div>
-                <div className="w-full h-1.5 rounded-full bg-prism-bg-elevated overflow-hidden">
-                  <div
-                    className="h-full rounded-full transition-all duration-500"
-                    style={{
-                      width: `${Math.min(cat.share, 100)}%`,
-                      backgroundColor: cat.color || '#3B82F6',
-                    }}
-                  />
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
-    </ChartCard>
+    </div>
   );
 };
+

@@ -3,8 +3,10 @@
 @tailwind utilities;
 
 :root {
-  --background: #090A0F;
-  --foreground: #F8FAFC;
+  --background: #f4f6fa;
+  --foreground: #0f172a;
+  --sidebar-bg: #0d1322;
+  --sidebar-border: #1a2236;
 }
 
 body {
@@ -17,27 +19,22 @@ body {
 
 /* Accessible Focus Ring */
 :where(a, button, input, select, textarea, [tabindex]):focus-visible {
-  outline: 2px solid #3B82F6;
+  outline: 2px solid #2563eb;
   outline-offset: 2px;
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.2);
 }
 
-/* Glassmorphism Surface Utility */
-.prism-surface-glass {
-  background: rgba(17, 19, 26, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(35, 39, 51, 0.8);
+/* Clean Executive Card Surface */
+.prism-executive-card {
+  background: #ffffff;
+  border: 1px solid #eef2f6;
+  box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04), 0 1px 2px -1px rgba(15, 23, 42, 0.02);
+  border-radius: 1rem;
 }
 
-.prism-surface-card {
-  background: #11131A;
-  border: 1px solid #232733;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.4);
-}
-
-.prism-surface-card:hover {
-  border-color: #363D4F;
+.prism-executive-card:hover {
+  border-color: #e2e8f0;
+  box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.06), 0 2px 4px -2px rgba(15, 23, 42, 0.04);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -50,19 +47,20 @@ body {
 
 /* Custom Minimalist Scrollbar */
 ::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #090A0F;
+  background: #f1f5f9;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #232733;
+  background: #cbd5e1;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #363D4F;
+  background: #94a3b8;
 }
+
