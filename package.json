@@ -18,7 +18,8 @@
     "test:dashboard": "npx tsx apps/web/scripts/test_dashboard_integration.ts",
     "test:explorer": "npx tsx apps/web/scripts/test_explorer_integration.ts",
     "test:ask": "npx tsx apps/web/scripts/test_ask_prism.ts",
-    "test:visualization": "npx tsx apps/web/scripts/test_visualization.ts"
+    "test:visualization": "npx tsx apps/web/scripts/test_visualization.ts",
+    "test:voice": "npx tsx apps/web/scripts/test_voice.ts"
   },
   "keywords": [
     "business-intelligence",

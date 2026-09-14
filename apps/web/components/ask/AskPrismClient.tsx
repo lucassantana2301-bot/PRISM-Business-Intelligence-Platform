@@ -19,6 +19,7 @@ import {
 } from '@/lib/contracts/ask';
 import { askPrism } from '@/lib/api/ask_client';
 import { VisualizationRenderer } from '@/components/visualization/VisualizationRenderer';
+import { VoiceInteractionButton } from '@/components/voice/VoiceInteractionButton';
 
 interface ChatMessage {
   id: string;
@@ -320,6 +321,11 @@ export const AskPrismClient: React.FC = () => {
             disabled={isLoading}
             onChange={(e) => setInputMessage(e.target.value)}
             className="flex-1 bg-prism-bg-card border border-prism-border-subtle rounded-lg px-4 py-2.5 text-xs text-prism-text-primary placeholder:text-prism-text-muted focus:outline-none focus:border-prism-accent-blue font-mono disabled:opacity-50"
+          />
+          <VoiceInteractionButton
+            onTranscriptComplete={(transcript) => handleSendMessage(transcript)}
+            isEngineBusy={isLoading}
+            latestAnswer={messages.length > 0 && messages[messages.length - 1].sender === 'prism' ? messages[messages.length - 1].text : null}
           />
           <button
             type="submit"
