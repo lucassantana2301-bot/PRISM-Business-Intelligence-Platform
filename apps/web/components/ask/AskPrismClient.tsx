@@ -8,30 +8,17 @@ import {
   User,
   RotateCcw,
   Code2,
-  TrendingUp,
-  BarChart3,
   Calendar,
   Layers,
   ChevronDown,
   ChevronUp,
 } from 'lucide-react';
 import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  Tooltip,
-  CartesianGrid,
-} from 'recharts';
-import {
   ConversationContext,
   VisualizationSpec,
 } from '@/lib/contracts/ask';
 import { askPrism } from '@/lib/api/ask_client';
-import { formatCurrency, formatInteger, formatDelta } from '@/lib/utils/formatters';
+import { VisualizationRenderer } from '@/components/visualization/VisualizationRenderer';
 
 interface ChatMessage {
   id: string;
@@ -141,116 +128,6 @@ export const AskPrismClient: React.FC = () => {
     setMessages([]);
     setInputMessage('');
     inputRef.current?.focus();
-  };
-
-  // Inline visualization renderer
-  const renderVisualization = (viz?: VisualizationSpec | null) => {
-    if (!viz) return null;
-    if (viz.type === 'metric') {
-      return (
-        <div className="mt-3 p-4 rounded-lg bg-prism-bg-base/80 border border-prism-border-subtle max-w-sm space-y-1">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-mono text-prism-text-muted">{viz.metric_label || 'Metric'}</span>
-            <Sparkles className="w-3.5 h-3.5 text-prism-accent-blue" />
-          </div>
-          <div className="text-xl font-bold font-mono text-prism-text-primary">{viz.metric_value}</div>
-          {viz.delta !== null && viz.delta !== undefined && (
-            <div className="flex items-center gap-1.5 pt-1 text-xs font-mono">
-              <span className={`px-1.5 py-0.5 rounded text-[11px] ${viz.is_favorable ? 'bg-emerald-950/60 text-emerald-400' : 'bg-rose-950/60 text-rose-400'}`}>
-                {formatDelta(viz.delta)}
-              </span>
-              {viz.comparison_label && (
-                <span className="text-prism-text-muted text-[11px]">{viz.comparison_label}</span>
-              )}
-            </div>
-          )}
-        </div>
-      );
-    }
-
-    if (viz.type === 'bar' && viz.series && viz.series.length > 0) {
-      const xKey = viz.x_axis || 'name';
-      const yKey = viz.y_axis || 'revenue';
-      return (
-        <div className="mt-3 p-4 rounded-lg bg-prism-bg-base/80 border border-prism-border-subtle space-y-2">
-          <div className="flex items-center justify-between text-xs font-mono text-prism-text-muted">
-            <span className="font-medium text-prism-text-primary">{viz.title}</span>
-            <BarChart3 className="w-3.5 h-3.5 text-prism-accent-blue" />
-          </div>
-          <div className="h-44 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={viz.series} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1E2230" vertical={false} />
-                <XAxis dataKey={xKey} stroke="#8A99AD" fontSize={10} tickLine={false} />
-                <YAxis stroke="#8A99AD" fontSize={10} tickLine={false} tickFormatter={(v) => typeof v === 'number' && v > 1000 ? `$${(v / 1000).toFixed(0)}k` : `${v}`} />
-                <Tooltip
-                  formatter={(val: any) => [typeof val === 'number' && val > 100 ? formatCurrency(val) : val, yKey]}
-                  contentStyle={{ backgroundColor: '#11131A', borderColor: '#363D4F', borderRadius: '8px', fontSize: '11px', color: '#F8FAFC' }}
-                />
-                <Bar dataKey={yKey} fill="#3B82F6" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      );
-    }
-
-    if (viz.type === 'area' && viz.series && viz.series.length > 0) {
-      const xKey = viz.x_axis || 'timestamp';
-      const yKey = viz.y_axis || 'net_revenue';
-      return (
-        <div className="mt-3 p-4 rounded-lg bg-prism-bg-base/80 border border-prism-border-subtle space-y-2">
-          <div className="flex items-center justify-between text-xs font-mono text-prism-text-muted">
-            <span className="font-medium text-prism-text-primary">{viz.title}</span>
-            <TrendingUp className="w-3.5 h-3.5 text-prism-accent-blue" />
-          </div>
-          <div className="h-44 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={viz.series} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1E2230" vertical={false} />
-                <XAxis dataKey={xKey} stroke="#8A99AD" fontSize={10} tickLine={false} tickFormatter={(d) => String(d).substring(5)} />
-                <YAxis stroke="#8A99AD" fontSize={10} tickLine={false} tickFormatter={(v) => typeof v === 'number' && v > 1000 ? `$${(v / 1000).toFixed(0)}k` : `${v}`} />
-                <Tooltip
-                  formatter={(val: any) => [typeof val === 'number' ? formatCurrency(val) : val, yKey]}
-                  contentStyle={{ backgroundColor: '#11131A', borderColor: '#363D4F', borderRadius: '8px', fontSize: '11px', color: '#F8FAFC' }}
-                />
-                <Area type="monotone" dataKey={yKey} stroke="#3B82F6" fill="#3B82F6" fillOpacity={0.2} strokeWidth={2} />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      );
-    }
-
-    if (viz.type === 'table' && viz.series && viz.series.length > 0) {
-      const keys = Object.keys(viz.series[0] || {}).slice(0, 4);
-      return (
-        <div className="mt-3 rounded-lg border border-prism-border-subtle overflow-hidden bg-prism-bg-base/60 text-xs">
-          <table className="w-full text-left font-mono">
-            <thead>
-              <tr className="bg-prism-bg-elevated/80 border-b border-prism-border-subtle text-[10px] text-prism-text-muted uppercase">
-                {keys.map((k) => (
-                  <th key={k} className="py-2 px-3">{k}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-prism-border-subtle/40 text-xs">
-              {viz.series.slice(0, 5).map((row, rIdx) => (
-                <tr key={rIdx} className="hover:bg-prism-bg-elevated/30">
-                  {keys.map((k) => (
-                    <td key={k} className="py-2 px-3 text-prism-text-secondary">
-                      {typeof row[k] === 'number' && row[k] > 100 ? formatCurrency(row[k], true) : String(row[k] ?? '—')}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      );
-    }
-
-    return null;
   };
 
   return (
@@ -370,7 +247,11 @@ export const AskPrismClient: React.FC = () => {
               </div>
 
               {/* Render dynamic visual response if attached */}
-              {msg.visualization && renderVisualization(msg.visualization)}
+              {msg.visualization && (
+                <div className="mt-3">
+                  <VisualizationRenderer spec={msg.visualization} />
+                </div>
+              )}
 
               {/* Query Inspector Pill */}
               {msg.queryDetails && (

@@ -3,6 +3,8 @@
  * Pure visual formatting utilities separated from analytical calculations.
  */
 
+import { FormatType } from '@/lib/contracts/analytics';
+
 export function formatCurrency(value: number, compact: boolean = false): string {
   if (value === null || value === undefined || isNaN(value)) return '$0.00';
   
@@ -37,6 +39,23 @@ export function formatPercentage(value: number, decimals: number = 2): string {
 export function formatRatio(value: number, suffix: string = 'x'): string {
   if (value === null || value === undefined || isNaN(value)) return `0.0${suffix}`;
   return `${value.toFixed(2)}${suffix}`;
+}
+
+export function formatMetricValue(value: number, type: FormatType = 'currency'): string {
+  switch (type) {
+    case 'currency':
+      return formatCurrency(value);
+    case 'percentage':
+      return formatPercentage(value);
+    case 'integer':
+      return formatInteger(value);
+    case 'ratio':
+      return formatRatio(value);
+    case 'decimal':
+      return value !== null && value !== undefined && !isNaN(value) ? value.toFixed(2) : '0.00';
+    default:
+      return String(value);
+  }
 }
 
 export function formatDelta(

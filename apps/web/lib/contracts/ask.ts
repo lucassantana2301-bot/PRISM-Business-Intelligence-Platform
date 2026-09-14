@@ -10,21 +10,10 @@ import {
   TimeGrain,
   ComparisonWindow,
 } from './analytics';
+import { VisualizationSpec, SupportedVisualizationType } from './visualization';
 
-export type VisualizationType = 'metric' | 'bar' | 'line' | 'area' | 'table';
-
-export interface VisualizationSpec {
-  type: VisualizationType;
-  title: string;
-  x_axis?: string | null;
-  y_axis?: string | null;
-  metric_label?: string | null;
-  metric_value?: string | null;
-  comparison_label?: string | null;
-  delta?: number | null;
-  is_favorable?: boolean | null;
-  series?: Record<string, any>[] | null;
-}
+export type VisualizationType = SupportedVisualizationType;
+export type { VisualizationSpec };
 
 export interface SemanticIntent {
   is_supported: boolean;

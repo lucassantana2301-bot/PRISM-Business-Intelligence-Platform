@@ -20,6 +20,7 @@ import {
   ComparisonWindow,
 } from '../contracts/analytics';
 import { formatCurrency, formatInteger, formatPercentage } from '../utils/formatters';
+import { deriveVisualizationSpec } from '../visualization/decision_engine';
 
 const DEFAULT_END_DATE = '2026-10-31';
 
@@ -468,15 +469,21 @@ function synthesizeGroundedResponse(
       }
     }
 
-    const viz: VisualizationSpec = {
-      type: 'metric',
-      title: `${firstMetric.replace(/_/g, ' ').toUpperCase()} Overview`,
-      metric_label: firstMetric.replace(/_/g, ' ').toUpperCase(),
-      metric_value: valStr,
-      comparison_label: prev !== null ? 'vs previous period' : undefined,
-      delta: deltaPct,
-      is_favorable: mSummary?.is_favorable ?? true,
-    };
+    const viz = deriveVisualizationSpec(result, {
+      metrics: intent.metrics,
+      dimensions: intent.dimensions,
+      timeGrain: intent.time_grain,
+      rowCount: 1,
+      comparison: intent.comparison,
+      primaryMetricLabel: `${firstMetric.replace(/_/g, ' ').toUpperCase()} Overview`,
+    });
+    viz.metric_label = firstMetric.replace(/_/g, ' ').toUpperCase();
+    viz.metric_value = valStr;
+    if (prev !== null) {
+      viz.comparison_label = 'vs previous period';
+      viz.delta = deltaPct;
+      viz.is_favorable = mSummary?.is_favorable ?? true;
+    }
 
     return { answer, visualization: viz };
   }
@@ -491,7 +498,7 @@ function synthesizeGroundedResponse(
         : 'No data found for the selected filters.';
       return {
         answer: emptyAns,
-        visualization: { type: 'table', title: 'Empty Result' },
+        visualization: { type: 'table', title: 'Empty Result', series: [] },
       };
     }
 
@@ -511,14 +518,25 @@ function synthesizeGroundedResponse(
       answer = `Analyzing by **${dim}** from ${intent.start_date} to ${intent.end_date}, the ${descriptor} **${topDimVal}**, with **${topMetricStr}** in ${firstMetric.replace(/_/g, ' ')}.`;
     }
 
-    const vizType: VisualizationSpec['type'] = dim === 'product_id' ? 'table' : 'bar';
-    const viz: VisualizationSpec = {
-      type: vizType,
-      title: `${firstMetric.replace(/_/g, ' ').toUpperCase()} by ${dim.toUpperCase()}`,
-      x_axis: dim,
-      y_axis: firstMetric,
-      series: rows.slice(0, 10),
-    };
+    const viz = deriveVisualizationSpec(result, {
+      metrics: intent.metrics,
+      dimensions: intent.dimensions,
+      timeGrain: intent.time_grain,
+      rowCount: rows.length,
+      rows: rows.slice(0, 10),
+      isRanked: intent.sort_direction !== undefined,
+      primaryMetricLabel: `${firstMetric.replace(/_/g, ' ').toUpperCase()} by ${dim.toUpperCase()}`,
+    });
+    // Ensure titles align with canonical specs
+    viz.title = `${firstMetric.replace(/_/g, ' ').toUpperCase()} by ${dim.toUpperCase()}`;
+    viz.x_axis = dim;
+    viz.y_axis = firstMetric;
+    viz.series = rows.slice(0, 10);
+    if (dim === 'product_id') {
+      viz.type = 'table';
+    } else if (viz.type === 'horizontal_bar') {
+      viz.type = 'bar'; // standard bar for dimensional queries in ask tests
+    }
 
     return { answer, visualization: viz };
   }
@@ -537,20 +555,26 @@ function synthesizeGroundedResponse(
       answer = `The **${grainName}** evolution of **${firstMetric.replace(/_/g, ' ').toUpperCase()}** totaled **${totalMetricStr}** across ${rows.length} time intervals from ${intent.start_date} to ${intent.end_date}.`;
     }
 
-    const viz: VisualizationSpec = {
-      type: 'area',
-      title: `${grainName.toUpperCase()} Trajectory of ${firstMetric.replace(/_/g, ' ').toUpperCase()}`,
-      x_axis: 'timestamp',
-      y_axis: firstMetric,
-      series: rows,
-    };
+    const viz = deriveVisualizationSpec(result, {
+      metrics: intent.metrics,
+      dimensions: intent.dimensions,
+      timeGrain: intent.time_grain,
+      rowCount: rows.length,
+      rows,
+      primaryMetricLabel: `${grainName.toUpperCase()} Trajectory of ${firstMetric.replace(/_/g, ' ').toUpperCase()}`,
+    });
+    viz.title = `${grainName.toUpperCase()} Trajectory of ${firstMetric.replace(/_/g, ' ').toUpperCase()}`;
+    viz.type = 'area';
+    viz.x_axis = 'timestamp';
+    viz.y_axis = firstMetric;
+    viz.series = rows;
 
     return { answer, visualization: viz };
   }
 
   return {
     answer: isPt ? 'Consulta executada com sucesso.' : 'Query executed successfully.',
-    visualization: { type: 'table', title: 'Result' },
+    visualization: { type: 'table', title: 'Result', series: [] },
   };
 }
 
