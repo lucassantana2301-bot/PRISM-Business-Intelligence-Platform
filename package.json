@@ -16,7 +16,8 @@
     "validate:data": "npx tsx apps/web/scripts/validate_dataset.ts",
     "test:analytics": "npx tsx apps/web/scripts/test_analytics_engine.ts",
     "test:dashboard": "npx tsx apps/web/scripts/test_dashboard_integration.ts",
-    "test:explorer": "npx tsx apps/web/scripts/test_explorer_integration.ts"
+    "test:explorer": "npx tsx apps/web/scripts/test_explorer_integration.ts",
+    "test:ask": "npx tsx apps/web/scripts/test_ask_prism.ts"
   },
   "keywords": [
     "business-intelligence",

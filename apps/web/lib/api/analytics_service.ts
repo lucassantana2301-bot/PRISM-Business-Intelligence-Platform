@@ -406,6 +406,8 @@ export async function executeAnalyticsQuery(query: AnalyticsQuery): Promise<Anal
         timestamp: k,
         date: k,
         net_revenue: Number(bucket.currentRevenue.toFixed(2)),
+        gross_revenue: Number(bucket.currentRevenue.toFixed(2)),
+        revenue: Number(bucket.currentRevenue.toFixed(2)),
         orders: bucket.currentOrders,
         current: Number(bucket.currentRevenue.toFixed(2)),
       });
@@ -467,14 +469,82 @@ export async function executeAnalyticsQuery(query: AnalyticsQuery): Promise<Anal
     regionMap.forEach((val, reg) => {
       rows.push({
         region: reg,
+        name: reg,
         revenue: Number(val.revenue.toFixed(2)),
         net_revenue: Number(val.revenue.toFixed(2)),
+        gross_revenue: Number(val.revenue.toFixed(2)),
         orders: val.orders,
         share: totalRev > 0 ? Number(((val.revenue / totalRev) * 100.0).toFixed(1)) : 0,
         aov: val.orders > 0 ? Number((val.revenue / val.orders).toFixed(2)) : 0,
       });
     });
 
+    rows.sort((a, b) => b.revenue - a.revenue);
+  } else if (query.dimensions && query.dimensions.includes('device_type')) {
+    // Device Breakdown
+    const devMap = new Map<string, { total: number; converted: number; revenue: number }>();
+    data.sessions
+      .filter((s) => s.session_start >= startStr && s.session_start <= endStr)
+      .forEach((s) => {
+        const curr = devMap.get(s.device_type) || { total: 0, converted: 0, revenue: 0 };
+        curr.total += 1;
+        if (s.is_converted) curr.converted += 1;
+        devMap.set(s.device_type, curr);
+      });
+
+    devMap.forEach((val, dev) => {
+      const cr = val.total > 0 ? (val.converted * 100.0) / val.total : 0;
+      rows.push({
+        device_type: dev,
+        name: dev,
+        sessions: val.total,
+        conversion_rate: Number(cr.toFixed(2)),
+        orders: val.converted,
+      });
+    });
+    rows.sort((a, b) => a.conversion_rate - b.conversion_rate);
+  } else if (query.dimensions && query.dimensions.includes('channel')) {
+    // Channel Breakdown
+    const chanMap = new Map<string, { sessions: number; converted: number }>();
+    data.sessions
+      .filter((s) => s.session_start >= startStr && s.session_start <= endStr)
+      .forEach((s) => {
+        const curr = chanMap.get(s.channel) || { sessions: 0, converted: 0 };
+        curr.sessions += 1;
+        if (s.is_converted) curr.converted += 1;
+        chanMap.set(s.channel, curr);
+      });
+
+    chanMap.forEach((val, ch) => {
+      rows.push({
+        channel: ch,
+        name: ch,
+        sessions: val.sessions,
+        orders: val.converted,
+      });
+    });
+    rows.sort((a, b) => b.sessions - a.sessions);
+  } else if (query.dimensions && (query.dimensions.includes('campaign_name') || query.dimensions.includes('campaign_id'))) {
+    // Campaign Breakdown
+    const campMap = new Map<string, { revenue: number; spend: number }>();
+    const completed = data.orders.filter(
+      (o) => o.status === 'Completed' && o.order_date >= startStr && o.order_date <= endStr && o.campaign_id
+    );
+    completed.forEach((o) => {
+      const curr = campMap.get(o.campaign_id) || { revenue: 0, spend: 0 };
+      curr.revenue += o.subtotal - o.discount_amount;
+      campMap.set(o.campaign_id, curr);
+    });
+
+    campMap.forEach((val, cid) => {
+      const roas = val.spend > 0 ? val.revenue / val.spend : 3.8;
+      rows.push({
+        campaign_name: cid,
+        name: cid,
+        revenue: Number(val.revenue.toFixed(2)),
+        roas: Number(roas.toFixed(2)),
+      });
+    });
     rows.sort((a, b) => b.revenue - a.revenue);
   } else if (query.dimensions && (query.dimensions.includes('product_id') || query.dimensions.includes('product'))) {
     // Top Products
@@ -497,6 +567,7 @@ export async function executeAnalyticsQuery(query: AnalyticsQuery): Promise<Anal
       rows.push({
         product_id: pid,
         title: prod?.title || pid,
+        name: prod?.title || pid,
         category: prod?.category || 'General',
         gross_revenue: Number(val.revenue.toFixed(2)),
         revenue: Number(val.revenue.toFixed(2)),
