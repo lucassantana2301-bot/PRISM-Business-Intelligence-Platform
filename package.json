@@ -13,7 +13,8 @@
     "typecheck": "npm --workspace=apps/web run typecheck",
     "test": "npm --workspace=apps/web run test",
     "generate:data": "npx tsx apps/web/scripts/generate_dataset.ts",
-    "validate:data": "npx tsx apps/web/scripts/validate_dataset.ts"
+    "validate:data": "npx tsx apps/web/scripts/validate_dataset.ts",
+    "test:analytics": "npx tsx apps/web/scripts/test_analytics_engine.ts"
   },
   "keywords": [
     "business-intelligence",
