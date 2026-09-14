@@ -136,9 +136,9 @@ export const OverviewDashboardClient: React.FC = () => {
     : [];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       {/* Top Controls: Date Preset Selector & Status */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-lg bg-prism-bg-card border border-prism-border-subtle">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-xl bg-prism-bg-card border border-prism-border-subtle shadow-prism-card">
         <DateRangeSelector
           selectedPreset={selectedPreset}
           onSelectPreset={handlePresetChange}
@@ -159,7 +159,7 @@ export const OverviewDashboardClient: React.FC = () => {
 
       {/* Error Banner */}
       {error && (
-        <div className="p-4 rounded-lg bg-rose-950/40 border border-rose-800/60 flex items-center justify-between">
+        <div className="p-4 rounded-xl bg-rose-950/40 border border-rose-800/60 flex items-center justify-between shadow-prism-card">
           <div className="flex items-center gap-2.5 text-rose-300 text-xs">
             <AlertCircle className="w-4 h-4 text-rose-400 flex-shrink-0" />
             <span>{error}</span>
@@ -167,7 +167,7 @@ export const OverviewDashboardClient: React.FC = () => {
           <button
             type="button"
             onClick={loadDashboardData}
-            className="flex items-center gap-1.5 px-3 py-1 bg-rose-900/60 hover:bg-rose-900 border border-rose-700/60 rounded text-xs text-rose-200"
+            className="flex items-center gap-1.5 px-3 py-1 bg-rose-900/60 hover:bg-rose-900 border border-rose-700/60 rounded-lg text-xs text-rose-200 transition-colors"
           >
             <RefreshCw className="w-3.5 h-3.5" />
             Retry

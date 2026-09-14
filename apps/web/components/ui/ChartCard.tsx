@@ -25,7 +25,7 @@ export const ChartCard: React.FC<ChartCardProps> = ({
   return (
     <div
       className={clsx(
-        'p-5 rounded-lg bg-prism-bg-card border border-prism-border-subtle hover:border-prism-border-hover transition-colors flex flex-col',
+        'p-5 rounded-xl bg-prism-bg-card border border-prism-border-subtle hover:border-prism-border-hover shadow-prism-card hover:shadow-prism-elevated transition-all duration-200 flex flex-col',
         className
       )}
     >
@@ -33,13 +33,13 @@ export const ChartCard: React.FC<ChartCardProps> = ({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
         <div>
           <div className="flex items-center gap-2">
-            <h3 className="text-sm font-medium text-prism-text-primary tracking-tight">
+            <h3 className="text-sm font-semibold text-prism-text-primary tracking-tight">
               {title}
             </h3>
             {badge}
           </div>
           {subtitle && (
-            <p className="text-xs text-prism-text-muted mt-0.5 font-normal">
+            <p className="text-xs text-prism-text-muted mt-0.5 font-sans">
               {subtitle}
             </p>
           )}

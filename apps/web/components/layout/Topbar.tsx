@@ -33,6 +33,8 @@ export const Topbar: React.FC<TopbarProps> = ({
         return ['Workspace', 'Acme E-Commerce', 'Insights & Anomalies'];
       case '/ask':
         return ['Workspace', 'Acme E-Commerce', 'Ask PRISM'];
+      case '/sources':
+        return ['Workspace', 'Acme E-Commerce', 'Data Sources & Warehouses'];
       default:
         return ['Workspace', 'Acme E-Commerce', 'Executive Overview'];
     }

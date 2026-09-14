@@ -61,15 +61,15 @@ export const MetricCard: React.FC<MetricCardProps> = ({
     : '#3B82F6'; // prism blue
 
   return (
-    <div className="p-5 rounded-lg bg-prism-bg-card border border-prism-border-subtle hover:border-prism-border-hover transition-all duration-200 relative overflow-hidden group">
+    <div className="p-5 rounded-xl bg-prism-bg-card border border-prism-border-subtle hover:border-prism-border-hover transition-all duration-200 relative overflow-hidden group shadow-prism-card hover:shadow-prism-elevated">
       {/* Top row: Label & Icon */}
       <div className="flex items-center justify-between mb-2">
-        <span className="text-xs font-medium text-prism-text-secondary tracking-wide">
+        <span className="text-xs font-medium text-prism-text-secondary tracking-wide uppercase font-mono">
           {label}
         </span>
         {Icon && (
-          <div className="text-prism-text-muted group-hover:text-prism-text-secondary transition-colors" aria-hidden="true">
-            <Icon className="w-4 h-4" />
+          <div className="p-1.5 rounded-lg bg-prism-bg-elevated border border-prism-border-subtle text-prism-text-muted group-hover:text-prism-text-primary group-hover:border-prism-border-hover transition-all" aria-hidden="true">
+            <Icon className="w-3.5 h-3.5" />
           </div>
         )}
       </div>
@@ -82,8 +82,8 @@ export const MetricCard: React.FC<MetricCardProps> = ({
       </div>
 
       {/* Bottom row: Trend Delta + Sparkline */}
-      <div className="flex items-center justify-between pt-1 border-t border-prism-border-subtle/50">
-        <div className="flex items-center gap-2 flex-wrap">
+      <div className="flex items-center justify-between pt-2 border-t border-prism-border-subtle/50">
+        <div className="flex items-center gap-2 flex-wrap min-w-0">
           {delta !== null && (
             <TrendBadge
               delta={delta}
@@ -91,18 +91,24 @@ export const MetricCard: React.FC<MetricCardProps> = ({
               size="sm"
             />
           )}
-          <span className="text-[11px] text-prism-text-muted font-mono">
+          <span className="text-[11px] text-prism-text-muted font-mono truncate">
             {comparisonLabel}
           </span>
         </div>
 
         {/* Micro Sparkline */}
-        <div className="w-20 h-7 shrink-0 opacity-70 group-hover:opacity-100 transition-opacity" aria-hidden="true">
+        <div className="w-20 h-7 shrink-0 opacity-80 group-hover:opacity-100 transition-opacity" aria-hidden="true">
           <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full overflow-visible">
+            <defs>
+              <linearGradient id={`grad-${label.replace(/\s+/g, '')}`} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={strokeColor} stopOpacity="0.25" />
+                <stop offset="100%" stopColor={strokeColor} stopOpacity="0.0" />
+              </linearGradient>
+            </defs>
             <polyline
               fill="none"
               stroke={strokeColor}
-              strokeWidth="1.75"
+              strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
               points={points}

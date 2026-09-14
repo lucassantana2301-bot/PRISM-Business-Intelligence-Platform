@@ -101,16 +101,16 @@ export const VisualizationRenderer: React.FC<VisualizationRendererProps> = ({
   // 1. Single Metric Card
   if (spec.type === 'metric') {
     return (
-      <div className={`p-4 rounded-xl bg-prism-bg-base/90 border border-prism-border-subtle max-w-sm space-y-2 ${className}`}>
+      <div className={`p-5 rounded-xl bg-prism-bg-base/90 border border-prism-border-subtle shadow-prism-card max-w-sm space-y-2.5 ${className}`}>
         {renderHeader(Sparkles)}
         {renderExplanationDrawer()}
-        <div className="text-2xl font-bold font-mono text-prism-text-primary tracking-tight">
+        <div className="text-3xl font-bold font-mono text-prism-text-primary tracking-tight">
           {spec.metric_value}
         </div>
         {spec.delta !== null && spec.delta !== undefined && (
-          <div className="flex items-center gap-1.5 text-xs font-mono pt-1">
+          <div className="flex items-center gap-2 text-xs font-mono pt-1">
             <span
-              className={`px-2 py-0.5 rounded text-[11px] font-medium ${
+              className={`px-2.5 py-0.5 rounded-lg text-[11px] font-semibold ${
                 spec.is_favorable ? 'bg-emerald-950/60 text-emerald-400 border border-emerald-800/40' : 'bg-rose-950/60 text-rose-400 border border-rose-800/40'
               }`}
             >
@@ -131,10 +131,10 @@ export const VisualizationRenderer: React.FC<VisualizationRendererProps> = ({
     const yKey = spec.y_axis || spec.metric || 'value';
 
     return (
-      <div className={`p-4 rounded-xl bg-prism-bg-base/90 border border-prism-border-subtle space-y-2 ${className}`}>
+      <div className={`p-5 rounded-xl bg-prism-bg-base/90 border border-prism-border-subtle shadow-prism-card space-y-3 ${className}`}>
         {renderHeader(BarChart3)}
         {renderExplanationDrawer()}
-        <div className="h-48 w-full">
+        <div className="h-52 w-full">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={spec.series} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#1E2230" vertical={false} />
@@ -147,7 +147,7 @@ export const VisualizationRenderer: React.FC<VisualizationRendererProps> = ({
               />
               <Tooltip
                 formatter={(val: any) => [formatValue(val), yKey]}
-                contentStyle={{ backgroundColor: '#11131A', borderColor: '#363D4F', borderRadius: '8px', fontSize: '11px', color: '#F8FAFC' }}
+                contentStyle={{ backgroundColor: 'rgba(17, 19, 26, 0.95)', borderColor: '#363D4F', borderRadius: '10px', fontSize: '11px', color: '#F8FAFC', boxShadow: '0 4px 12px rgba(0,0,0,0.5)' }}
               />
               <Bar dataKey={yKey} fill="#3B82F6" radius={[4, 4, 0, 0]} />
             </BarChart>
@@ -163,10 +163,10 @@ export const VisualizationRenderer: React.FC<VisualizationRendererProps> = ({
     const yKey = spec.x_axis || spec.dimension || 'name';
 
     return (
-      <div className={`p-4 rounded-xl bg-prism-bg-base/90 border border-prism-border-subtle space-y-2 ${className}`}>
+      <div className={`p-5 rounded-xl bg-prism-bg-base/90 border border-prism-border-subtle shadow-prism-card space-y-3 ${className}`}>
         {renderHeader(BarChart3)}
         {renderExplanationDrawer()}
-        <div className="h-52 w-full">
+        <div className="h-56 w-full">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={spec.series} layout="vertical" margin={{ top: 5, right: 20, left: 20, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#1E2230" horizontal={false} />
@@ -180,7 +180,7 @@ export const VisualizationRenderer: React.FC<VisualizationRendererProps> = ({
               <YAxis type="category" dataKey={yKey} stroke="#8A99AD" fontSize={10} tickLine={false} width={80} />
               <Tooltip
                 formatter={(val: any) => [formatValue(val), xKey]}
-                contentStyle={{ backgroundColor: '#11131A', borderColor: '#363D4F', borderRadius: '8px', fontSize: '11px', color: '#F8FAFC' }}
+                contentStyle={{ backgroundColor: 'rgba(17, 19, 26, 0.95)', borderColor: '#363D4F', borderRadius: '10px', fontSize: '11px', color: '#F8FAFC', boxShadow: '0 4px 12px rgba(0,0,0,0.5)' }}
               />
               <Bar dataKey={xKey} fill="#8B5CF6" radius={[0, 4, 4, 0]} />
             </BarChart>
@@ -196,10 +196,10 @@ export const VisualizationRenderer: React.FC<VisualizationRendererProps> = ({
     const yKey = spec.y_axis || 'net_revenue';
 
     return (
-      <div className={`p-4 rounded-xl bg-prism-bg-base/90 border border-prism-border-subtle space-y-2 ${className}`}>
+      <div className={`p-5 rounded-xl bg-prism-bg-base/90 border border-prism-border-subtle shadow-prism-card space-y-3 ${className}`}>
         {renderHeader(TrendingUp)}
         {renderExplanationDrawer()}
-        <div className="h-48 w-full">
+        <div className="h-52 w-full">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={spec.series} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
               <defs>
@@ -218,7 +218,7 @@ export const VisualizationRenderer: React.FC<VisualizationRendererProps> = ({
               />
               <Tooltip
                 formatter={(val: any) => [formatValue(val), yKey]}
-                contentStyle={{ backgroundColor: '#11131A', borderColor: '#363D4F', borderRadius: '8px', fontSize: '11px', color: '#F8FAFC' }}
+                contentStyle={{ backgroundColor: 'rgba(17, 19, 26, 0.95)', borderColor: '#363D4F', borderRadius: '10px', fontSize: '11px', color: '#F8FAFC', boxShadow: '0 4px 12px rgba(0,0,0,0.5)' }}
               />
               <Area type="monotone" dataKey={yKey} stroke="#3B82F6" fill="url(#colorArea)" strokeWidth={2} />
             </AreaChart>
@@ -234,10 +234,10 @@ export const VisualizationRenderer: React.FC<VisualizationRendererProps> = ({
     const yKey = spec.y_axis || 'value';
 
     return (
-      <div className={`p-4 rounded-xl bg-prism-bg-base/90 border border-prism-border-subtle space-y-2 ${className}`}>
+      <div className={`p-5 rounded-xl bg-prism-bg-base/90 border border-prism-border-subtle shadow-prism-card space-y-3 ${className}`}>
         {renderHeader(TrendingUp)}
         {renderExplanationDrawer()}
-        <div className="h-48 w-full">
+        <div className="h-52 w-full">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={spec.series} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#1E2230" vertical={false} />
@@ -245,7 +245,7 @@ export const VisualizationRenderer: React.FC<VisualizationRendererProps> = ({
               <YAxis stroke="#8A99AD" fontSize={10} tickLine={false} />
               <Tooltip
                 formatter={(val: any) => [formatValue(val), yKey]}
-                contentStyle={{ backgroundColor: '#11131A', borderColor: '#363D4F', borderRadius: '8px', fontSize: '11px', color: '#F8FAFC' }}
+                contentStyle={{ backgroundColor: 'rgba(17, 19, 26, 0.95)', borderColor: '#363D4F', borderRadius: '10px', fontSize: '11px', color: '#F8FAFC', boxShadow: '0 4px 12px rgba(0,0,0,0.5)' }}
               />
               <Line type="monotone" dataKey={yKey} stroke="#10B981" strokeWidth={2} dot={{ r: 3, fill: '#10B981' }} />
             </LineChart>
@@ -261,15 +261,15 @@ export const VisualizationRenderer: React.FC<VisualizationRendererProps> = ({
     const valKey = spec.metric || spec.y_axis || 'value';
 
     return (
-      <div className={`p-4 rounded-xl bg-prism-bg-base/90 border border-prism-border-subtle space-y-2 ${className}`}>
+      <div className={`p-5 rounded-xl bg-prism-bg-base/90 border border-prism-border-subtle shadow-prism-card space-y-3 ${className}`}>
         {renderHeader(PieIcon)}
         {renderExplanationDrawer()}
-        <div className="h-52 w-full flex items-center justify-center">
+        <div className="h-56 w-full flex items-center justify-center">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Tooltip
                 formatter={(val: any) => [formatValue(val), valKey]}
-                contentStyle={{ backgroundColor: '#11131A', borderColor: '#363D4F', borderRadius: '8px', fontSize: '11px', color: '#F8FAFC' }}
+                contentStyle={{ backgroundColor: 'rgba(17, 19, 26, 0.95)', borderColor: '#363D4F', borderRadius: '10px', fontSize: '11px', color: '#F8FAFC', boxShadow: '0 4px 12px rgba(0,0,0,0.5)' }}
               />
               <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontSize: '10px', color: '#8A99AD' }} />
               <Pie
@@ -297,8 +297,8 @@ export const VisualizationRenderer: React.FC<VisualizationRendererProps> = ({
   if (spec.type === 'table' && spec.series && spec.series.length > 0) {
     const keys = Object.keys(spec.series[0] || {}).slice(0, 5);
     return (
-      <div className={`rounded-xl border border-prism-border-subtle overflow-hidden bg-prism-bg-base/90 ${className}`}>
-        <div className="p-3 border-b border-prism-border-subtle bg-prism-bg-base">
+      <div className={`rounded-xl border border-prism-border-subtle overflow-hidden bg-prism-bg-base/90 shadow-prism-card ${className}`}>
+        <div className="p-3.5 border-b border-prism-border-subtle bg-prism-bg-base">
           {renderHeader(TableIcon)}
           {renderExplanationDrawer()}
         </div>
