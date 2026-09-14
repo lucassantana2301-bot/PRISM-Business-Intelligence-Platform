@@ -11,7 +11,9 @@
     "build": "npm --workspace=apps/web run build",
     "lint": "npm --workspace=apps/web run lint",
     "typecheck": "npm --workspace=apps/web run typecheck",
-    "test": "npm --workspace=apps/web run test"
+    "test": "npm --workspace=apps/web run test",
+    "generate:data": "npx tsx apps/web/scripts/generate_dataset.ts",
+    "validate:data": "npx tsx apps/web/scripts/validate_dataset.ts"
   },
   "keywords": [
     "business-intelligence",

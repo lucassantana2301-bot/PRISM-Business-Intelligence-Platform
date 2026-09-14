@@ -44,6 +44,7 @@ wheels/
 *.duckdb
 *.db
 data/cache/
+data/generated/
 
 # Environment variables and secrets (Strictly Protected)
 .env

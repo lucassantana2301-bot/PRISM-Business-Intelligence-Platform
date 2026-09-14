@@ -1,0 +1,97 @@
+{
+  "dataset_version": "1.0-ecommerce-synthetic",
+  "generated_at": "2026-09-14T14:50:06.040Z",
+  "seed": 42,
+  "date_range": {
+    "start_date": "2025-05-01",
+    "end_date": "2026-10-31"
+  },
+  "events": [
+    {
+      "event_id": "EVENT-01",
+      "name": "Mobile iOS Gateway Conversion Degradation",
+      "start_date": "2026-10-12",
+      "end_date": "2026-10-18",
+      "affected_dimensions": {
+        "device_type": [
+          "Mobile iOS"
+        ],
+        "funnel_step": "checkout_to_purchase"
+      },
+      "analytical_effect": "Mobile iOS checkout completion drops by ~35% due to payment gateway timeout.",
+      "severity": "critical",
+      "category": "Funnel Anomaly"
+    },
+    {
+      "event_id": "EVENT-02",
+      "name": "Electronics Flash Campaign Surge in Southeast",
+      "start_date": "2026-09-01",
+      "end_date": "2026-09-08",
+      "affected_dimensions": {
+        "category": [
+          "Electronics"
+        ],
+        "region": [
+          "Southeast"
+        ],
+        "channel": [
+          "Email Marketing",
+          "Paid Search (Google)"
+        ]
+      },
+      "analytical_effect": "Electronics category gross revenue surges +140% in SP and RJ with 5.2x ROAS.",
+      "severity": "opportunity",
+      "category": "Marketing Lift"
+    },
+    {
+      "event_id": "EVENT-03",
+      "name": "Paid Social High-CAC / Low-Conversion Campaign",
+      "start_date": "2026-07-15",
+      "end_date": "2026-07-22",
+      "affected_dimensions": {
+        "channel": [
+          "Paid Social (Meta/TikTok)"
+        ],
+        "category": [
+          "Beauty & Health"
+        ]
+      },
+      "analytical_effect": "Paid Social traffic doubles (+100% sessions), but conversion rate drops by 50%.",
+      "severity": "warning",
+      "category": "Ad Inefficiency"
+    },
+    {
+      "event_id": "EVENT-04",
+      "name": "Breakout High-Margin Product Growth in Home & Living",
+      "start_date": "2026-08-01",
+      "end_date": "2026-10-31",
+      "affected_dimensions": {
+        "subcategory": [
+          "Kitchen Appliances"
+        ],
+        "product": "Digital Air Fryer 5.5L Inox"
+      },
+      "analytical_effect": "Breakout viral demand increases unit sales of Digital Air Fryer by 220%.",
+      "severity": "opportunity",
+      "category": "Product Trend"
+    },
+    {
+      "event_id": "EVENT-05",
+      "name": "Cart Abandonment Surge from Freight Policy Friction",
+      "start_date": "2026-05-18",
+      "end_date": "2026-05-25",
+      "affected_dimensions": {
+        "category": [
+          "Home & Living",
+          "Sports & Outdoors"
+        ],
+        "device_type": [
+          "Desktop"
+        ]
+      },
+      "analytical_effect": "Cart abandonment increases from 72% to 86% on heavy items (>$300).",
+      "severity": "warning",
+      "category": "Checkout Friction"
+    }
+  ]
+}
