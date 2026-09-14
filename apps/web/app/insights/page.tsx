@@ -2,18 +2,30 @@ import React from 'react';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { StatusBadge } from '@/components/ui/Badges';
 import { InsightsFeed } from '@/components/insights/InsightsFeed';
-import { mockInsightsData } from '@/lib/mock/ecommerce';
+import { detectBusinessInsights } from '@/lib/api/insights_service';
 
-export default function InsightsPage() {
+export const dynamic = 'force-dynamic';
+
+export default async function InsightsPage() {
+  const data = await detectBusinessInsights();
+
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Insights & Anomaly Feed"
-        description="Autonomous statistical signals: detection of revenue spikes, conversion bottlenecks, and driver attribution (sample preview)."
-        badge={<StatusBadge status="cached" label={`${mockInsightsData.length} Sample Signals`} />}
+        title="Proactive Business Insights & Anomalies"
+        description="Autonomous statistical signals derived from canonical data: conversion bottlenecks, category surges, and regional disparities."
+        badge={
+          <StatusBadge
+            status="anomaly"
+            label={`${data.total_detected} Statistical Signals (${data.critical_count} Critical)`}
+          />
+        }
       />
 
-      <InsightsFeed insights={mockInsightsData} />
+      <InsightsFeed
+        insights={data.insights}
+        evaluatedPeriod={data.evaluated_period}
+      />
     </div>
   );
 }
