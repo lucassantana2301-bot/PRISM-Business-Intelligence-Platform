@@ -1,10 +1,12 @@
 """
 PRISM Analytics API Gateway
-FastAPI entrypoint exposing the Semantic Metric Registry, Analytics Engine, and Data Explorer endpoints.
+FastAPI entrypoint exposing the Semantic Metric Registry, Analytics Engine,
+Data Explorer, and Ask PRISM Conversational endpoints.
 """
 
+import uuid
 from typing import Dict, Any, List, Optional
-from fastapi import FastAPI, HTTPException, Response
+from fastapi import FastAPI, HTTPException, Response, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from .analytics.metrics import CANONICAL_METRIC_REGISTRY, DEFERRED_METRICS, MetricDefinition
@@ -13,11 +15,13 @@ from .analytics.engine import AnalyticsEngine
 from .explorer.registry import DATASET_REGISTRY, DatasetMetadata
 from .explorer.query_spec import ExplorerQuery, ExplorerQueryResult, ExplorerExportQuery
 from .explorer.service import ExplorerService
+from .contracts.intent import AskPrismRequest, AskPrismResponse
+from .providers.intent_resolver import AskPrismEngine
 
 app = FastAPI(
     title="PRISM Business Intelligence Core API",
-    description="Analytics Engine, Semantic Layer, and Data Explorer Gateway",
-    version="0.5.0",
+    description="Analytics Engine, Semantic Layer, Data Explorer, and Ask PRISM Gateway",
+    version="0.6.5",
 )
 
 app.add_middleware(
@@ -31,6 +35,7 @@ app.add_middleware(
 # Singletons
 engine: Optional[AnalyticsEngine] = None
 explorer_service: Optional[ExplorerService] = None
+ask_engine: Optional[AskPrismEngine] = None
 
 
 def get_engine() -> AnalyticsEngine:
@@ -47,12 +52,19 @@ def get_explorer_service() -> ExplorerService:
     return explorer_service
 
 
+def get_ask_engine() -> AskPrismEngine:
+    global ask_engine
+    if ask_engine is None:
+        ask_engine = AskPrismEngine(get_engine())
+    return ask_engine
+
+
 @app.get("/health")
 async def health_check():
     return {
         "status": "online",
         "service": "prism-api",
-        "phase": "05-data-explorer",
+        "phase": "06.5-canonicalization-hardening",
         "protocol_version": "1.0",
         "canonical_metrics_count": len(CANONICAL_METRIC_REGISTRY),
         "allowlisted_datasets_count": len(DATASET_REGISTRY),
@@ -81,7 +93,24 @@ async def query_analytics(query: AnalyticsQuery):
     except ValueError as ve:
         raise HTTPException(status_code=400, detail=str(ve))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Internal analytics error: {str(e)}")
+        req_id = f"err-{uuid.uuid4().hex[:8]}"
+        raise HTTPException(status_code=500, detail=f"Internal analytics error [ID: {req_id}]")
+
+
+# ==================== ASK PRISM CONVERSATIONAL ENDPOINT ====================
+
+@app.post("/api/ask/query", response_model=AskPrismResponse)
+async def ask_prism_query(request: AskPrismRequest):
+    """Execute natural language conversational analytics with semantic intent resolution and grounded narration."""
+    try:
+        ask_svc = get_ask_engine()
+        response = ask_svc.process_query(request)
+        return response
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+    except Exception as e:
+        req_id = f"err-{uuid.uuid4().hex[:8]}"
+        raise HTTPException(status_code=500, detail=f"Ask PRISM processing error [ID: {req_id}]")
 
 
 # ==================== DATA EXPLORER ENDPOINTS ====================
@@ -117,7 +146,8 @@ async def query_explorer(query: ExplorerQuery):
     except ValueError as ve:
         raise HTTPException(status_code=400, detail=str(ve))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Data Explorer query error: {str(e)}")
+        req_id = f"err-{uuid.uuid4().hex[:8]}"
+        raise HTTPException(status_code=500, detail=f"Data Explorer query error [ID: {req_id}]")
 
 
 @app.post("/api/explorer/export")
@@ -134,4 +164,5 @@ async def export_explorer_csv(query: ExplorerExportQuery):
     except ValueError as ve:
         raise HTTPException(status_code=400, detail=str(ve))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Export error: {str(e)}")
+        req_id = f"err-{uuid.uuid4().hex[:8]}"
+        raise HTTPException(status_code=500, detail=f"Export error [ID: {req_id}]")

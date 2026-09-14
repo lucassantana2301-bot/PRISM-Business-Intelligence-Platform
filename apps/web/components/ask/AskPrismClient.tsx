@@ -38,7 +38,7 @@ interface ChatMessage {
   sender: 'user' | 'prism';
   text: string;
   timestamp: string;
-  visualization?: VisualizationSpec;
+  visualization?: VisualizationSpec | null;
   queryDetails?: {
     metrics: string[];
     dimensions: string[];
@@ -144,7 +144,8 @@ export const AskPrismClient: React.FC = () => {
   };
 
   // Inline visualization renderer
-  const renderVisualization = (viz: VisualizationSpec) => {
+  const renderVisualization = (viz?: VisualizationSpec | null) => {
+    if (!viz) return null;
     if (viz.type === 'metric') {
       return (
         <div className="mt-3 p-4 rounded-lg bg-prism-bg-base/80 border border-prism-border-subtle max-w-sm space-y-1">

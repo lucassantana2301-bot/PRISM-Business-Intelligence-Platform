@@ -1,5 +1,5 @@
 /**
- * PRISM Ask PRISM — Conversational BI Domain Contracts
+ * PRISM Ask PRISM — Conversational Analytics Contracts
  * Authoritative TypeScript definitions mirroring apps/api/src/contracts/intent.py
  */
 
@@ -16,27 +16,31 @@ export type VisualizationType = 'metric' | 'bar' | 'line' | 'area' | 'table';
 export interface VisualizationSpec {
   type: VisualizationType;
   title: string;
-  x_axis?: string;
-  y_axis?: string;
-  metric_label?: string;
-  metric_value?: string;
-  comparison_label?: string;
+  x_axis?: string | null;
+  y_axis?: string | null;
+  metric_label?: string | null;
+  metric_value?: string | null;
+  comparison_label?: string | null;
   delta?: number | null;
   is_favorable?: boolean | null;
-  series?: Record<string, any>[];
+  series?: Record<string, any>[] | null;
 }
 
 export interface SemanticIntent {
+  is_supported: boolean;
+  confidence: number;
   metrics: string[];
   dimensions: string[];
   time_grain?: TimeGrain | null;
   start_date: string;
   end_date: string;
-  comparison?: ComparisonWindow;
+  comparison?: ComparisonWindow | null;
   filters: AnalyticsFilter[];
   limit?: number;
+  sort_direction?: 'asc' | 'desc';
   visualization_hint: VisualizationType;
   intent_summary: string;
+  clarification_prompt?: string | null;
 }
 
 export interface ConversationContext {
@@ -59,10 +63,16 @@ export interface AskPrismRequest {
 
 export interface AskPrismResponse {
   answer: string;
+  is_supported: boolean;
+  confidence: number;
   intent: SemanticIntent;
-  query: AnalyticsQuery;
-  result: AnalyticsQueryResult;
-  visualization: VisualizationSpec;
+  query?: AnalyticsQuery | null;
+  result?: AnalyticsQueryResult | null;
+  visualization?: VisualizationSpec | null;
   context: ConversationContext;
-  execution_time_ms: number;
+  execution_time_ms: float;
+  request_id?: string;
+  error_category?: string;
 }
+
+type float = number;

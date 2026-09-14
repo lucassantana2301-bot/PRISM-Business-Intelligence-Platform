@@ -1,19 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { processAskPrismQuery } from '@/lib/api/ask_service';
+import { executeAskPrismQuery, validateRuntimeRequest } from '@/lib/api/ask_service';
 import { AskPrismRequest } from '@/lib/contracts/ask';
 
 export async function POST(req: NextRequest) {
+  const requestId = `req-${Math.random().toString(36).substring(2, 10)}`;
   try {
-    const body = (await req.json()) as AskPrismRequest;
-    if (!body.message || !body.message.trim()) {
-      return NextResponse.json({ error: 'Message is required.' }, { status: 400 });
+    let body: AskPrismRequest;
+    try {
+      body = (await req.json()) as AskPrismRequest;
+    } catch {
+      return NextResponse.json(
+        { error: 'Invalid JSON payload.', request_id: requestId },
+        { status: 400 }
+      );
     }
 
-    const response = await processAskPrismQuery(body);
+    const validation = validateRuntimeRequest(body);
+    if (!validation.valid) {
+      return NextResponse.json(
+        { error: validation.error, request_id: requestId },
+        { status: 400 }
+      );
+    }
+
+    const response = await executeAskPrismQuery(body);
     return NextResponse.json(response);
-  } catch (err: any) {
+  } catch {
     return NextResponse.json(
-      { error: err.message || 'Ask PRISM processing failed' },
+      { error: 'An unexpected processing error occurred.', request_id: requestId },
       { status: 500 }
     );
   }

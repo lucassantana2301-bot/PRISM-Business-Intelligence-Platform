@@ -85,15 +85,29 @@ interface Customer {
   created_at: string;
 }
 
+interface Campaign {
+  campaign_id: string;
+  campaign_name: string;
+  channel: string;
+  campaign_type: string;
+  budget: number;
+  actual_spend: number;
+  target_category: string;
+  start_date: string;
+  end_date: string;
+}
+
 interface DatasetCache {
   orders: Order[];
   orderItems: OrderItem[];
   sessions: Session[];
   products: Product[];
   customers: Customer[];
+  campaigns: Campaign[];
   productMap: Map<string, Product>;
   customerMap: Map<string, Customer>;
   ordersMap: Map<string, Order>;
+  campaignMap: Map<string, Campaign>;
 }
 
 let cachedData: DatasetCache | null = null;
@@ -138,6 +152,7 @@ function parseCsv<T>(filePath: string, transform: (row: Record<string, string>) 
     });
     results.push(transform(row));
   }
+
   return results;
 }
 
@@ -213,6 +228,18 @@ function loadDataset(): DatasetCache {
     created_at: r.created_at,
   }));
 
+  const campaigns = parseCsv<Campaign>(path.join(DATA_DIR, 'campaigns.csv'), (r) => ({
+    campaign_id: r.campaign_id,
+    campaign_name: r.campaign_name,
+    channel: r.channel,
+    campaign_type: r.campaign_type,
+    budget: parseFloat(r.budget) || 0,
+    actual_spend: parseFloat(r.actual_spend) || 0,
+    target_category: r.target_category,
+    start_date: r.start_date,
+    end_date: r.end_date,
+  }));
+
   const productMap = new Map<string, Product>();
   products.forEach((p) => productMap.set(p.product_id, p));
 
@@ -222,15 +249,20 @@ function loadDataset(): DatasetCache {
   const ordersMap = new Map<string, Order>();
   orders.forEach((o) => ordersMap.set(o.order_id, o));
 
+  const campaignMap = new Map<string, Campaign>();
+  campaigns.forEach((camp) => campaignMap.set(camp.campaign_id, camp));
+
   cachedData = {
     orders,
     orderItems,
     sessions,
     products,
     customers,
+    campaigns,
     productMap,
     customerMap,
     ordersMap,
+    campaignMap,
   };
 
   return cachedData;
@@ -249,15 +281,21 @@ export function computeComparisonDates(
   const durationDays = Math.round(durationMs / (1000 * 60 * 60 * 24));
 
   if (comparison === 'previous_period') {
-    const compEnd = new Date(dStart.getTime() - 1000);
+    const compEnd = new Date(dStart.getTime() - 24 * 60 * 60 * 1000);
     const compStart = new Date(compEnd.getTime() - (durationDays - 1) * 24 * 60 * 60 * 1000);
-    return [compStart.toISOString().split('T')[0], compEnd.toISOString().split('T')[0]];
+    return [compStart.toISOString().slice(0, 10), compEnd.toISOString().slice(0, 10)];
+  } else if (comparison === 'previous_year') {
+    const compStart = new Date(dStart);
+    compStart.setUTCFullYear(dStart.getUTCFullYear() - 1);
+    const compEnd = new Date(dEnd);
+    compEnd.setUTCFullYear(dEnd.getUTCFullYear() - 1);
+    return [compStart.toISOString().slice(0, 10), compEnd.toISOString().slice(0, 10)];
   }
 
   return null;
 }
 
-function calculateScalarMetric(
+function calculateMetric(
   metricId: MetricName,
   startDate: string,
   endDate: string,
@@ -266,150 +304,223 @@ function calculateScalarMetric(
   const startStr = `${startDate} 00:00:00`;
   const endStr = `${endDate} 23:59:59`;
 
-  const windowOrders = data.orders.filter(
+  const completedOrders = data.orders.filter(
     (o) => o.status === 'Completed' && o.order_date >= startStr && o.order_date <= endStr
   );
-  const windowOrderIds = new Set(windowOrders.map((o) => o.order_id));
-  const windowItems = data.orderItems.filter((oi) => windowOrderIds.has(oi.order_id));
+  const completedOrderIds = new Set(completedOrders.map((o) => o.order_id));
+
+  const itemsInCompleted = data.orderItems.filter((oi) => completedOrderIds.has(oi.order_id));
+
   const windowSessions = data.sessions.filter(
     (s) => s.session_start >= startStr && s.session_start <= endStr
   );
 
   switch (metricId) {
-    case 'gross_revenue':
-      return windowItems.reduce((acc, oi) => acc + oi.total_item_revenue, 0);
-
-    case 'net_revenue':
-      return windowOrders.reduce((acc, o) => acc + (o.subtotal - o.discount_amount), 0);
-
-    case 'orders':
-      return windowOrders.length;
-
+    case 'gross_revenue': {
+      return itemsInCompleted.reduce((sum, item) => sum + item.total_item_revenue, 0);
+    }
+    case 'net_revenue': {
+      return completedOrders.reduce((sum, o) => sum + (o.subtotal - o.discount_amount), 0);
+    }
+    case 'orders': {
+      return completedOrders.length;
+    }
     case 'average_order_value': {
-      const netRev = windowOrders.reduce((acc, o) => acc + (o.subtotal - o.discount_amount), 0);
-      return windowOrders.length > 0 ? netRev / windowOrders.length : 0.0;
+      if (completedOrders.length === 0) return 0;
+      const netRev = completedOrders.reduce((sum, o) => sum + (o.subtotal - o.discount_amount), 0);
+      return netRev / completedOrders.length;
     }
-
-    case 'sessions':
+    case 'sessions': {
       return windowSessions.length;
-
+    }
     case 'conversion_rate': {
+      if (windowSessions.length === 0) return 0;
       const converted = windowSessions.filter((s) => s.is_converted).length;
-      return windowSessions.length > 0 ? (converted * 100.0) / windowSessions.length : 0.0;
+      return (converted / windowSessions.length) * 100.0;
     }
-
     case 'cart_abandonment_rate': {
-      const cartAdds = windowSessions.filter((s) => s.has_cart_add).length;
-      const converted = windowSessions.filter((s) => s.is_converted).length;
-      return cartAdds > 0 ? ((cartAdds - converted) * 100.0) / cartAdds : 0.0;
+      const carts = windowSessions.filter((s) => s.has_cart_add).length;
+      if (carts === 0) return 0;
+      const converted = windowSessions.filter((s) => s.has_cart_add && s.is_converted).length;
+      return ((carts - converted) / carts) * 100.0;
     }
-
-    case 'total_customers':
-      return new Set(windowOrders.map((o) => o.customer_id)).size;
-
-    case 'units_sold':
-      return windowItems.reduce((acc, oi) => acc + oi.quantity, 0);
-
-    case 'gross_margin':
-      return windowItems.reduce((acc, oi) => acc + (oi.total_item_revenue - oi.total_item_cost), 0);
-
-    case 'gross_margin_rate': {
-      const grossRev = windowItems.reduce((acc, oi) => acc + oi.total_item_revenue, 0);
-      const grossMargin = windowItems.reduce(
-        (acc, oi) => acc + (oi.total_item_revenue - oi.total_item_cost),
-        0
+    case 'total_customers': {
+      const uniqueCust = new Set(completedOrders.map((o) => o.customer_id));
+      return uniqueCust.size;
+    }
+    case 'new_customers': {
+      const firstOrderDateMap = new Map<string, string>();
+      data.orders
+        .filter((o) => o.status === 'Completed')
+        .forEach((o) => {
+          const curr = firstOrderDateMap.get(o.customer_id);
+          if (!curr || o.order_date < curr) {
+            firstOrderDateMap.set(o.customer_id, o.order_date);
+          }
+        });
+      let newCount = 0;
+      firstOrderDateMap.forEach((firstDate) => {
+        if (firstDate >= startStr && firstDate <= endStr) {
+          newCount++;
+        }
+      });
+      return newCount;
+    }
+    case 'returning_customers': {
+      const priorCusts = new Set(
+        data.orders
+          .filter((o) => o.status === 'Completed' && o.order_date < startStr)
+          .map((o) => o.customer_id)
       );
-      return grossRev > 0 ? (grossMargin * 100.0) / grossRev : 0.0;
+      const currCusts = new Set(completedOrders.map((o) => o.customer_id));
+      let returning = 0;
+      currCusts.forEach((c) => {
+        if (priorCusts.has(c)) returning++;
+      });
+      return returning;
     }
+    case 'units_sold': {
+      return itemsInCompleted.reduce((sum, item) => sum + item.quantity, 0);
+    }
+    case 'gross_margin': {
+      const totalRev = itemsInCompleted.reduce((sum, item) => sum + item.total_item_revenue, 0);
+      const totalCost = itemsInCompleted.reduce((sum, item) => sum + item.total_item_cost, 0);
+      return totalRev - totalCost;
+    }
+    case 'gross_margin_rate': {
+      const totalRev = itemsInCompleted.reduce((sum, item) => sum + item.total_item_revenue, 0);
+      const totalCost = itemsInCompleted.reduce((sum, item) => sum + item.total_item_cost, 0);
+      if (totalRev === 0) return 0;
+      return ((totalRev - totalCost) / totalRev) * 100.0;
+    }
+    case 'revenue_per_customer': {
+      const uniqueCust = new Set(completedOrders.map((o) => o.customer_id));
+      if (uniqueCust.size === 0) return 0;
+      const netRev = completedOrders.reduce((sum, o) => sum + (o.subtotal - o.discount_amount), 0);
+      return netRev / uniqueCust.size;
+    }
+    case 'revenue_per_session': {
+      if (windowSessions.length === 0) return 0;
+      const netRev = completedOrders.reduce((sum, o) => sum + (o.subtotal - o.discount_amount), 0);
+      return netRev / windowSessions.length;
+    }
+    case 'roas': {
+      const campaignRev = completedOrders
+        .filter((o) => !!o.campaign_id)
+        .reduce((sum, o) => sum + (o.subtotal - o.discount_amount), 0);
 
+      const campaignSpend = data.campaigns
+        .filter((c) => c.start_date <= endDate && c.end_date >= startDate)
+        .reduce((sum, c) => sum + c.actual_spend, 0);
+
+      if (campaignSpend === 0) return 0;
+      return campaignRev / campaignSpend;
+    }
     default:
-      return 0.0;
+      return 0;
   }
 }
 
-export async function executeAnalyticsQuery(query: AnalyticsQuery): Promise<AnalyticsQueryResult> {
+export async function executeAnalyticsQuery(
+  query: AnalyticsQuery
+): Promise<AnalyticsQueryResult> {
   const t0 = performance.now();
   const data = loadDataset();
 
-  const compDates = computeComparisonDates(query.start_date, query.end_date, query.comparison);
+  const startStr = `${query.start_date} 00:00:00`;
+  const endStr = `${query.end_date} 23:59:59`;
+
+  const compDates = computeComparisonDates(
+    query.start_date,
+    query.end_date,
+    query.comparison
+  );
+
   const metrics_summary: Record<string, MetricSummaryValue> = {};
 
-  for (const metric of query.metrics) {
-    const currVal = calculateScalarMetric(metric, query.start_date, query.end_date, data);
+  for (const m of query.metrics) {
+    const currVal = calculateMetric(m, query.start_date, query.end_date, data);
     let prevVal: number | null = null;
     let absDelta: number | null = null;
     let pctDelta: number | null = null;
     let isFavorable: boolean | null = null;
 
     if (compDates) {
-      prevVal = calculateScalarMetric(metric, compDates[0], compDates[1], data);
+      prevVal = calculateMetric(m, compDates[0], compDates[1], data);
       absDelta = Number((currVal - prevVal).toFixed(4));
-      pctDelta = prevVal > 0 ? Number((((currVal - prevVal) / prevVal) * 100.0).toFixed(2)) : currVal > 0 ? 100.0 : 0.0;
-      isFavorable = metric === 'cart_abandonment_rate' ? currVal <= prevVal : currVal >= prevVal;
+      if (prevVal > 0) {
+        pctDelta = Number((((currVal - prevVal) / prevVal) * 100.0).toFixed(2));
+      } else {
+        pctDelta = currVal > 0 ? 100.0 : 0.0;
+      }
+
+      const isFavorableUp = !['cart_abandonment_rate'].includes(m);
+      isFavorable = isFavorableUp ? currVal >= prevVal : currVal <= prevVal;
     }
 
-    metrics_summary[metric] = {
-      metric_id: metric,
+    let formatType: MetricSummaryValue['format_type'] = 'decimal';
+    if (['gross_revenue', 'net_revenue', 'average_order_value', 'revenue_per_customer', 'revenue_per_session', 'gross_margin'].includes(m)) {
+      formatType = 'currency';
+    } else if (['orders', 'sessions', 'total_customers', 'new_customers', 'returning_customers', 'units_sold'].includes(m)) {
+      formatType = 'integer';
+    } else if (['conversion_rate', 'cart_abandonment_rate', 'gross_margin_rate'].includes(m)) {
+      formatType = 'percentage';
+    } else if (['roas'].includes(m)) {
+      formatType = 'ratio';
+    }
+
+    metrics_summary[m] = {
+      metric_id: m,
       current_value: Number(currVal.toFixed(4)),
       previous_value: prevVal !== null ? Number(prevVal.toFixed(4)) : null,
       absolute_delta: absDelta,
       percentage_delta: pctDelta,
-      format_type:
-        metric === 'conversion_rate' || metric === 'cart_abandonment_rate' || metric === 'gross_margin_rate'
-          ? 'percentage'
-          : metric === 'orders' || metric === 'sessions' || metric === 'total_customers' || metric === 'units_sold'
-          ? 'integer'
-          : 'currency',
-      is_favorable_up: metric !== 'cart_abandonment_rate',
+      format_type: formatType,
+      is_favorable_up: !['cart_abandonment_rate'].includes(m),
       is_favorable: isFavorable,
     };
   }
 
-  // Multi-dimensional breakdown & Time series
   const rows: Record<string, any>[] = [];
-  const startStr = `${query.start_date} 00:00:00`;
-  const endStr = `${query.end_date} 23:59:59`;
 
   if (query.time_grain) {
-    // Time Series grouping
-    const timeBuckets = new Map<string, { currentRevenue: number; currentOrders: number }>();
+    const isWeekly = query.time_grain === 'week';
+    const isDaily = query.time_grain === 'day';
 
     const completed = data.orders.filter(
       (o) => o.status === 'Completed' && o.order_date >= startStr && o.order_date <= endStr
     );
 
-    completed.forEach((o) => {
-      const d = o.order_date.split(' ')[0];
-      let key = d;
+    const timeBuckets = new Map<string, { netRev: number; grossRev: number; orders: number }>();
 
-      if (query.time_grain === 'week') {
-        const parts = d.split('-').map((p) => parseInt(p, 10));
-        const dt = new Date(Date.UTC(parts[0], parts[1] - 1, parts[2]));
+    completed.forEach((o) => {
+      const dt = new Date(o.order_date);
+      let bucketKey = o.order_date.slice(0, 10);
+      if (isWeekly) {
         const day = dt.getUTCDay();
         const diff = dt.getUTCDate() - day + (day === 0 ? -6 : 1);
-        key = new Date(Date.UTC(dt.getUTCFullYear(), dt.getUTCMonth(), diff)).toISOString().split('T')[0];
+        const monday = new Date(dt.setDate(diff));
+        bucketKey = monday.toISOString().slice(0, 10);
       } else if (query.time_grain === 'month') {
-        key = d.substring(0, 7) + '-01';
+        bucketKey = o.order_date.slice(0, 7) + '-01';
       }
 
-      const curr = timeBuckets.get(key) || { currentRevenue: 0, currentOrders: 0 };
-      curr.currentRevenue += o.subtotal - o.discount_amount;
-      curr.currentOrders += 1;
-      timeBuckets.set(key, curr);
+      const curr = timeBuckets.get(bucketKey) || { netRev: 0, grossRev: 0, orders: 0 };
+      curr.netRev += o.subtotal - o.discount_amount;
+      curr.grossRev += o.total_revenue;
+      curr.orders += 1;
+      timeBuckets.set(bucketKey, curr);
     });
 
-    // Sort chronologically
-    const sortedKeys = Array.from(timeBuckets.keys()).sort();
-    sortedKeys.forEach((k) => {
-      const bucket = timeBuckets.get(k)!;
+    const sortedBuckets = Array.from(timeBuckets.keys()).sort();
+    sortedBuckets.forEach((bKey) => {
+      const val = timeBuckets.get(bKey)!;
       rows.push({
-        timestamp: k,
-        date: k,
-        net_revenue: Number(bucket.currentRevenue.toFixed(2)),
-        gross_revenue: Number(bucket.currentRevenue.toFixed(2)),
-        revenue: Number(bucket.currentRevenue.toFixed(2)),
-        orders: bucket.currentOrders,
-        current: Number(bucket.currentRevenue.toFixed(2)),
+        timestamp: bKey,
+        date: bKey,
+        gross_revenue: Number(val.grossRev.toFixed(2)),
+        net_revenue: Number(val.netRev.toFixed(2)),
+        orders: val.orders,
       });
     });
   } else if (query.dimensions && query.dimensions.includes('category')) {
@@ -451,35 +562,44 @@ export async function executeAnalyticsQuery(query: AnalyticsQuery): Promise<Anal
     rows.sort((a, b) => b.revenue - a.revenue);
   } else if (query.dimensions && query.dimensions.includes('region')) {
     // Regional Performance Breakdown
-    const regionMap = new Map<string, { revenue: number; orders: number }>();
+    const regionMap = new Map<string, { netRevenue: number; grossRevenue: number; orders: number }>();
     const completed = data.orders.filter(
       (o) => o.status === 'Completed' && o.order_date >= startStr && o.order_date <= endStr
     );
+    const orderIds = new Set(completed.map((o) => o.order_id));
+    const items = data.orderItems.filter((oi) => orderIds.has(oi.order_id));
+    const orderItemsMap = new Map<string, number>();
+    items.forEach((oi) => {
+      orderItemsMap.set(oi.order_id, (orderItemsMap.get(oi.order_id) || 0) + oi.total_item_revenue);
+    });
 
     completed.forEach((o) => {
       const cust = data.customerMap.get(o.customer_id);
       const reg = cust?.region || 'Other';
-      const curr = regionMap.get(reg) || { revenue: 0, orders: 0 };
-      curr.revenue += o.subtotal - o.discount_amount;
+      const curr = regionMap.get(reg) || { netRevenue: 0, grossRevenue: 0, orders: 0 };
+      curr.netRevenue += o.subtotal - o.discount_amount;
+      curr.grossRevenue += orderItemsMap.get(o.order_id) || o.total_revenue;
       curr.orders += 1;
       regionMap.set(reg, curr);
     });
 
-    const totalRev = Array.from(regionMap.values()).reduce((a, b) => a + b.revenue, 0);
+    const isGross = query.metrics.includes('gross_revenue');
+    const totalRev = Array.from(regionMap.values()).reduce((a, b) => a + (isGross ? b.grossRevenue : b.netRevenue), 0);
     regionMap.forEach((val, reg) => {
+      const revVal = isGross ? val.grossRevenue : val.netRevenue;
       rows.push({
         region: reg,
         name: reg,
-        revenue: Number(val.revenue.toFixed(2)),
-        net_revenue: Number(val.revenue.toFixed(2)),
-        gross_revenue: Number(val.revenue.toFixed(2)),
+        revenue: Number(revVal.toFixed(2)),
+        net_revenue: Number(val.netRevenue.toFixed(2)),
+        gross_revenue: Number(val.grossRevenue.toFixed(2)),
         orders: val.orders,
-        share: totalRev > 0 ? Number(((val.revenue / totalRev) * 100.0).toFixed(1)) : 0,
-        aov: val.orders > 0 ? Number((val.revenue / val.orders).toFixed(2)) : 0,
+        share: totalRev > 0 ? Number(((revVal / totalRev) * 100.0).toFixed(1)) : 0,
+        aov: val.orders > 0 ? Number((revVal / val.orders).toFixed(2)) : 0,
       });
     });
 
-    rows.sort((a, b) => b.revenue - a.revenue);
+    rows.sort((a, b) => b.gross_revenue - a.gross_revenue);
   } else if (query.dimensions && query.dimensions.includes('device_type')) {
     // Device Breakdown
     const devMap = new Map<string, { total: number; converted: number; revenue: number }>();
@@ -526,26 +646,30 @@ export async function executeAnalyticsQuery(query: AnalyticsQuery): Promise<Anal
     rows.sort((a, b) => b.sessions - a.sessions);
   } else if (query.dimensions && (query.dimensions.includes('campaign_name') || query.dimensions.includes('campaign_id'))) {
     // Campaign Breakdown
-    const campMap = new Map<string, { revenue: number; spend: number }>();
+    const campMap = new Map<string, { revenue: number; name: string }>();
     const completed = data.orders.filter(
       (o) => o.status === 'Completed' && o.order_date >= startStr && o.order_date <= endStr && o.campaign_id
     );
     completed.forEach((o) => {
-      const curr = campMap.get(o.campaign_id) || { revenue: 0, spend: 0 };
+      const camp = data.campaignMap.get(o.campaign_id);
+      const campName = camp?.campaign_name || o.campaign_id;
+      const curr = campMap.get(o.campaign_id) || { revenue: 0, name: campName };
       curr.revenue += o.subtotal - o.discount_amount;
       campMap.set(o.campaign_id, curr);
     });
 
     campMap.forEach((val, cid) => {
-      const roas = val.spend > 0 ? val.revenue / val.spend : 3.8;
+      const camp = data.campaignMap.get(cid);
+      const spend = camp ? camp.actual_spend : 0;
+      const roas = spend > 0 ? val.revenue / spend : 0.0;
       rows.push({
-        campaign_name: cid,
-        name: cid,
+        campaign_name: val.name,
+        name: val.name,
         revenue: Number(val.revenue.toFixed(2)),
         roas: Number(roas.toFixed(2)),
       });
     });
-    rows.sort((a, b) => b.revenue - a.revenue);
+    rows.sort((a, b) => b.roas - a.roas);
   } else if (query.dimensions && (query.dimensions.includes('product_id') || query.dimensions.includes('product'))) {
     // Top Products
     const prodMetrics = new Map<string, { revenue: number; units: number }>();
@@ -579,6 +703,18 @@ export async function executeAnalyticsQuery(query: AnalyticsQuery): Promise<Anal
     if (query.limit) {
       rows.splice(query.limit);
     }
+  }
+
+  // Explicit OrderBy sorting if requested
+  if (query.order_by && query.order_by.length > 0) {
+    const ob = query.order_by[0];
+    const field = ob.field;
+    const isAsc = ob.direction === 'asc';
+    rows.sort((a, b) => {
+      const vA = a[field] !== undefined ? a[field] : (a.revenue ?? 0);
+      const vB = b[field] !== undefined ? b[field] : (b.revenue ?? 0);
+      return isAsc ? vA - vB : vB - vA;
+    });
   }
 
   const executionTimeMs = Number((performance.now() - t0).toFixed(2));
@@ -653,7 +789,7 @@ export function calculateConversionFunnel(startDate: string, endDate: string): F
       count: checkouts,
       conversion: getStepConv(checkouts, cartAdds),
       drop: getDrop(checkouts, cartAdds),
-      rate: totalSessions > 0 ? (checkouts / totalSessions) * 100 : 0,
+      rate: totalSessions > 0 ? (checkouts / totalAdds(totalSessions)) * 100 : 0,
     },
     {
       step: '5. Completed Purchase',
@@ -663,4 +799,8 @@ export function calculateConversionFunnel(startDate: string, endDate: string): F
       rate: totalSessions > 0 ? (conversions / totalSessions) * 100 : 0,
     },
   ];
+
+  function totalAdds(tot: number) {
+    return tot > 0 ? tot : 1;
+  }
 }
