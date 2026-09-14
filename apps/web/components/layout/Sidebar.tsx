@@ -56,6 +56,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
       icon: MessageSquareCode,
       highlight: true,
     },
+    {
+      label: 'Data Sources',
+      href: '/sources',
+      icon: Database,
+    },
   ];
 
   return (

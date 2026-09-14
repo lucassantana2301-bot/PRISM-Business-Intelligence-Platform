@@ -20,7 +20,8 @@
     "test:ask": "npx tsx apps/web/scripts/test_ask_prism.ts",
     "test:visualization": "npx tsx apps/web/scripts/test_visualization.ts",
     "test:voice": "npx tsx apps/web/scripts/test_voice.ts",
-    "test:insights": "npx tsx apps/web/scripts/test_insights.ts"
+    "test:insights": "npx tsx apps/web/scripts/test_insights.ts",
+    "test:data-providers": "npx tsx apps/web/scripts/test_data_providers.ts"
   },
   "keywords": [
     "business-intelligence",
