@@ -15,6 +15,8 @@ import {
 } from 'lucide-react';
 import clsx from 'clsx';
 
+import { Prism3DSphere } from '@/components/ui/Prism3DSphere';
+
 export interface SidebarProps {
   collapsed: boolean;
   onToggleCollapse: () => void;
@@ -48,17 +50,19 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggleCollapse, o
           className="flex min-w-0 items-center gap-3 text-white group notranslate"
           translate="no"
         >
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500/20 to-cyan-500/20 border border-indigo-500/40 text-xs font-bold text-prism-cyan font-mono transition-transform duration-150 group-hover:scale-105">
-            P
-          </div>
+          <Prism3DSphere size={34} className="transition-transform duration-200 group-hover:scale-110" />
           {!collapsed && (
-            <div>
-              <div className="flex items-center gap-1.5">
-                <span className="font-semibold tracking-[0.16em] text-sm text-white notranslate" translate="no">PRISM</span>
-                <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 font-medium">v2.4</span>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="font-extrabold tracking-[0.18em] text-sm text-white notranslate" translate="no">
+                  PRISM
+                </span>
+                <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 font-bold tracking-wider">
+                  v2.4
+                </span>
               </div>
-              <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-slate-500">
-                Decision System
+              <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-slate-400 font-medium">
+                DECISION SYSTEM
               </p>
             </div>
           )}
