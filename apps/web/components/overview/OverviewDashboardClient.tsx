@@ -9,10 +9,12 @@ import { SourceRefraction } from './SourceRefraction';
 import { IntelligenceBrief, IntelligenceSignal } from './IntelligenceBrief';
 import { ConversionFunnelCard } from './ConversionFunnelCard';
 import { ExecutiveExportModal } from './ExecutiveExportModal';
+import { AlarmRulesModal } from './AlarmRulesModal';
 import { AnalyticalCoordinate } from '@/components/ui/AnalyticalCoordinate';
 import { TimeGrain } from '@/lib/contracts/analytics';
 import { fetchOverviewDashboardData, OverviewDashboardData } from '@/lib/api/analytics';
 import { formatCurrency, formatDelta, formatExecutionTime, formatPercentage } from '@/lib/utils/formatters';
+import { Bell } from 'lucide-react';
 
 export const OverviewDashboardClient: React.FC = () => {
   const [selectedPreset, setSelectedPreset] = useState<DateRangePreset>('30d');
@@ -21,6 +23,7 @@ export const OverviewDashboardClient: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [isAlarmModalOpen, setIsAlarmModalOpen] = useState(false);
   const activeRange = DATE_PRESETS[selectedPreset];
 
   const loadDashboardData = useCallback(async () => {
@@ -147,6 +150,16 @@ export const OverviewDashboardClient: React.FC = () => {
 
           <button
             type="button"
+            onClick={() => setIsAlarmModalOpen(true)}
+            className="prism-secondary-button text-xs"
+            title="Configurar Alarmes e Salvaguardas CloudWatch"
+          >
+            <Bell className="h-3.5 w-3.5 text-amber-500" />
+            <span>Alarmes (CloudWatch)</span>
+          </button>
+
+          <button
+            type="button"
             onClick={() => setIsExportModalOpen(true)}
             disabled={isLoading || !data}
             className="prism-secondary-button text-xs"
@@ -252,6 +265,12 @@ export const OverviewDashboardClient: React.FC = () => {
         onClose={() => setIsExportModalOpen(false)}
         data={data}
         periodLabel={activeRange.label}
+      />
+
+      {/* CloudWatch Alarms Modal */}
+      <AlarmRulesModal
+        isOpen={isAlarmModalOpen}
+        onClose={() => setIsAlarmModalOpen(false)}
       />
     </div>
   );
