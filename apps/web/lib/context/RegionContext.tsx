@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useMemo } from 'react';
 
 export interface RegionInfo {
   id: string;
@@ -45,34 +45,22 @@ const RegionContext = createContext<RegionContextType | undefined>(undefined);
 export const RegionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [activeRegion, setActiveRegion] = useState<RegionInfo>(REGIONS[0]);
   const [activeEnv, setActiveEnv] = useState<EnvironmentInfo>(ENVIRONMENTS[0]);
-  const [cacheHitRate, setCacheHitRate] = useState(99.4);
-  const [activeThreads] = useState(8);
+  const cacheHitRate = 99.4;
+  const activeThreads = 8;
 
-  // Subtle telemetry jitter for realism
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCacheHitRate((prev) => {
-        const jitter = (Math.random() * 0.4 - 0.2);
-        return Math.min(99.9, Math.max(98.8, +(prev + jitter).toFixed(1)));
-      });
-    }, 8000);
-    return () => clearInterval(interval);
-  }, []);
-
-  return (
-    <RegionContext.Provider
-      value={{
-        activeRegion,
-        setActiveRegion,
-        activeEnv,
-        setActiveEnv,
-        cacheHitRate,
-        activeThreads,
-      }}
-    >
-      {children}
-    </RegionContext.Provider>
+  const value = useMemo(
+    () => ({
+      activeRegion,
+      setActiveRegion,
+      activeEnv,
+      setActiveEnv,
+      cacheHitRate,
+      activeThreads,
+    }),
+    [activeRegion, activeEnv]
   );
+
+  return <RegionContext.Provider value={value}>{children}</RegionContext.Provider>;
 };
 
 export const useRegion = () => {

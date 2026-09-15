@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Activity, Radio, ArrowUpRight, Zap, ShoppingCart } from 'lucide-react';
+import React, { useState, useEffect, memo } from 'react';
+import { ShoppingCart } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils/formatters';
 
 interface LiveTransaction {
@@ -12,14 +12,13 @@ interface LiveTransaction {
   amount: number;
   payment: string;
   category: string;
-  timeAgo: string;
 }
 
 const initialTransactions: LiveTransaction[] = [
-  { id: '1', orderId: 'ORD-9842', customer: 'Lucas M.', region: 'SP', amount: 349.0, payment: 'PIX', category: 'Electronics', timeAgo: 'agora' },
-  { id: '2', orderId: 'ORD-9841', customer: 'Fernanda R.', region: 'RJ', amount: 129.5, payment: 'Cartão', category: 'Apparel', timeAgo: 'há 2s' },
-  { id: '3', orderId: 'ORD-9840', customer: 'Rodrigo S.', region: 'PR', amount: 899.0, payment: 'PIX', category: 'Electronics', timeAgo: 'há 4s' },
-  { id: '4', orderId: 'ORD-9839', customer: 'Beatriz A.', region: 'MG', amount: 210.0, payment: 'Cartão', category: 'Home & Living', timeAgo: 'há 6s' },
+  { id: '1', orderId: 'ORD-9842', customer: 'Lucas M.', region: 'SP', amount: 349.0, payment: 'PIX', category: 'Electronics' },
+  { id: '2', orderId: 'ORD-9841', customer: 'Fernanda R.', region: 'RJ', amount: 129.5, payment: 'Cartão', category: 'Apparel' },
+  { id: '3', orderId: 'ORD-9840', customer: 'Rodrigo S.', region: 'PR', amount: 899.0, payment: 'PIX', category: 'Electronics' },
+  { id: '4', orderId: 'ORD-9839', customer: 'Beatriz A.', region: 'MG', amount: 210.0, payment: 'Cartão', category: 'Home & Living' },
 ];
 
 const mockNames = ['Mariana S.', 'Carlos E.', 'Gabriel P.', 'Camila T.', 'Rafael B.', 'Larissa F.', 'Juliana M.'];
@@ -27,7 +26,7 @@ const mockRegions = ['SP', 'RJ', 'MG', 'RS', 'PR', 'SC', 'BA'];
 const mockCategories = ['Electronics', 'Apparel', 'Home & Living', 'Beauty & Health', 'Accessories'];
 const mockPayments = ['PIX', 'Credit Card', 'Boleto'];
 
-export const LiveStreamTicker: React.FC = () => {
+export const LiveStreamTicker: React.FC = memo(() => {
   const [isLive, setIsLive] = useState(true);
   const [transactions, setTransactions] = useState<LiveTransaction[]>(initialTransactions);
   const [liveGmv, setLiveGmv] = useState(865262.5);
@@ -35,8 +34,9 @@ export const LiveStreamTicker: React.FC = () => {
   useEffect(() => {
     if (!isLive) return;
 
+    // Use lightweight 4s cadence to preserve main-thread smoothness
     const interval = setInterval(() => {
-      const randomAmount = Math.floor(Math.random() * 850) + 45;
+      const randomAmount = Math.floor(Math.random() * 600) + 50;
       const newTx: LiveTransaction = {
         id: `tx-${Date.now()}`,
         orderId: `ORD-${Math.floor(Math.random() * 8999) + 1000}`,
@@ -45,18 +45,17 @@ export const LiveStreamTicker: React.FC = () => {
         amount: randomAmount,
         payment: mockPayments[Math.floor(Math.random() * mockPayments.length)],
         category: mockCategories[Math.floor(Math.random() * mockCategories.length)],
-        timeAgo: 'agora',
       };
 
-      setTransactions((prev) => [newTx, ...prev.slice(0, 5)]);
+      setTransactions((prev) => [newTx, prev[0], prev[1], prev[2]]);
       setLiveGmv((prev) => prev + randomAmount);
-    }, 2500);
+    }, 4000);
 
     return () => clearInterval(interval);
   }, [isLive]);
 
   return (
-    <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 p-3 rounded-2xl bg-white border border-slate-200 shadow-2xs overflow-hidden font-sans text-xs">
+    <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 p-3 rounded-2xl bg-white border border-slate-200 shadow-2xs overflow-hidden font-sans text-xs contain-content">
       {/* Live Status Pill & GMV counter */}
       <div className="flex items-center gap-3 shrink-0 border-b md:border-b-0 md:border-r border-slate-100 pb-2 md:pb-0 md:pr-4">
         <button
@@ -69,7 +68,7 @@ export const LiveStreamTicker: React.FC = () => {
           }`}
           title="Alternar streaming de transações ao vivo"
         >
-          <span className={`h-2 w-2 rounded-full ${isLive ? 'bg-rose-500 animate-ping' : 'bg-slate-400'}`} />
+          <span className={`h-2 w-2 rounded-full ${isLive ? 'bg-rose-500 animate-pulse' : 'bg-slate-400'}`} />
           <span>{isLive ? 'LIVE STREAM' : 'STREAM PAUSADO'}</span>
         </button>
 
@@ -82,13 +81,13 @@ export const LiveStreamTicker: React.FC = () => {
       </div>
 
       {/* Real-time Order Ticker Tape */}
-      <div className="flex-1 overflow-x-auto flex items-center gap-3 py-1 no-scrollbar">
+      <div className="flex-1 overflow-x-auto flex items-center gap-2.5 py-0.5 no-scrollbar">
         {transactions.map((tx, idx) => (
           <div
             key={tx.id}
-            className={`flex items-center gap-2.5 px-3 py-1.5 rounded-xl border text-[11px] font-mono shrink-0 transition-all ${
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-[11px] font-mono shrink-0 transition-colors ${
               idx === 0
-                ? 'bg-indigo-50/80 border-indigo-200 text-indigo-950 font-bold shadow-2xs animate-in zoom-in-95 duration-200'
+                ? 'bg-indigo-50/80 border-indigo-200 text-indigo-950 font-bold shadow-2xs'
                 : 'bg-slate-50 border-slate-200/80 text-slate-700'
             }`}
           >
@@ -106,4 +105,6 @@ export const LiveStreamTicker: React.FC = () => {
       </div>
     </div>
   );
-};
+});
+
+LiveStreamTicker.displayName = 'LiveStreamTicker';
