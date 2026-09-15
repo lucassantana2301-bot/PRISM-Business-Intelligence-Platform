@@ -56,7 +56,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
           onClick={() => setMobileMenuOpen(false)}
         >
           <div
-            className="w-64 h-full bg-prism-bg-canvas border-r border-prism-border-subtle"
+            className="w-68 h-full bg-[#161922] border-r border-[#272c38]"
             onClick={(e) => e.stopPropagation()}
           >
             <Sidebar
