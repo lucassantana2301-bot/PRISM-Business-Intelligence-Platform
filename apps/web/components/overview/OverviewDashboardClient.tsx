@@ -16,11 +16,17 @@ import { MetricDrilldownModal } from './MetricDrilldownModal';
 import { GoalsThermometer } from './GoalsThermometer';
 import { WhatIfSimulator } from './WhatIfSimulator';
 import { BoardroomModeModal } from './BoardroomModeModal';
+import { BrazilGeoHeatmap } from './BrazilGeoHeatmap';
+import { AnomalyDetectionRadar } from './AnomalyDetectionRadar';
+import { SlaHealthCockpit } from './SlaHealthCockpit';
+import { ExecutiveDossierGenerator } from './ExecutiveDossierGenerator';
+import { VoiceStudioModal } from './VoiceStudioModal';
 import { AnalyticalCoordinate } from '@/components/ui/AnalyticalCoordinate';
 import { TimeGrain, MetricSummaryValue } from '@/lib/contracts/analytics';
 import { fetchOverviewDashboardData, OverviewDashboardData, prewarmOverviewCache } from '@/lib/api/analytics';
 import { formatCurrency, formatDelta, formatExecutionTime, formatPercentage } from '@/lib/utils/formatters';
-import { Tv } from 'lucide-react';
+import { soundEffects } from '@/lib/utils/soundEffects';
+import { Tv, Mic, FileText } from 'lucide-react';
 
 export const OverviewDashboardClient: React.FC = () => {
   const [selectedPreset, setSelectedPreset] = useState<DateRangePreset>('30d');
@@ -31,6 +37,8 @@ export const OverviewDashboardClient: React.FC = () => {
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [isAlarmModalOpen, setIsAlarmModalOpen] = useState(false);
   const [isBoardroomOpen, setIsBoardroomOpen] = useState(false);
+  const [isDossierOpen, setIsDossierOpen] = useState(false);
+  const [isVoiceStudioOpen, setIsVoiceStudioOpen] = useState(false);
 
   // Drilldown state
   const [drilldownMetric, setDrilldownMetric] = useState<{
@@ -178,34 +186,56 @@ export const OverviewDashboardClient: React.FC = () => {
 
           <button
             type="button"
-            onClick={() => setIsBoardroomOpen(true)}
+            onClick={() => {
+              soundEffects.playClick();
+              setIsVoiceStudioOpen(true);
+            }}
+            className="prism-secondary-button text-xs bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100"
+            title="Abrir Assistente de Voz Neural PRISM"
+          >
+            <Mic className="h-3.5 w-3.5 text-indigo-600" />
+            <span className="font-semibold">Voz IA</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              soundEffects.playBoardroomActivate();
+              setIsBoardroomOpen(true);
+            }}
             disabled={isLoading || !data}
             className="prism-secondary-button text-xs bg-slate-900 text-white hover:bg-slate-800 border-slate-700 shadow-xs"
             title="Abrir Modo Apresentação / Painel de TV Executivo"
           >
             <Tv className="h-3.5 w-3.5 text-indigo-400" />
-            <span className="font-semibold">Modo Diretoria (TV)</span>
+            <span className="font-semibold">Modo TV</span>
           </button>
 
           <button
             type="button"
-            onClick={() => setIsAlarmModalOpen(true)}
+            onClick={() => {
+              soundEffects.playClick();
+              setIsDossierOpen(true);
+            }}
+            disabled={isLoading || !data}
+            className="prism-secondary-button text-xs"
+            title="Gerar Dossiê Oficial e Imprimir PDF"
+          >
+            <FileText className="h-3.5 w-3.5 text-indigo-600" />
+            <span>Dossiê PDF</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              soundEffects.playClick();
+              setIsAlarmModalOpen(true);
+            }}
             className="prism-secondary-button text-xs"
             title="Configurar Alarmes e Salvaguardas CloudWatch"
           >
             <Bell className="h-3.5 w-3.5 text-amber-500" />
             <span>Alarmes</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setIsExportModalOpen(true)}
-            disabled={isLoading || !data}
-            className="prism-secondary-button text-xs"
-            title="Gerar Relatório Executivo e Exportação"
-          >
-            <Zap className="h-3.5 w-3.5 text-indigo-600" />
-            <span>Relatório Executivo</span>
           </button>
 
           <button
@@ -271,10 +301,16 @@ export const OverviewDashboardClient: React.FC = () => {
         baseOrders={orders?.current_value}
       />
 
+      {/* 04.2 — REAL-TIME STATISTICAL ANOMALY DETECTION RADAR */}
+      <AnomalyDetectionRadar />
+
       {/* 05 — EDITORIAL INTELLIGENCE BRIEF */}
       {!isLoading && <IntelligenceBrief signals={signals} />}
 
-      {/* 06 — OPERATIONAL EVIDENCE FIELD */}
+      {/* 06 — BRAZILIAN GEOGRAPHIC RADAR & HEATMAP */}
+      <BrazilGeoHeatmap />
+
+      {/* 07 — OPERATIONAL EVIDENCE FIELD */}
       <section className="space-y-6" aria-labelledby="evidence-heading">
         <div className="flex items-center justify-between">
           <div>
@@ -316,12 +352,30 @@ export const OverviewDashboardClient: React.FC = () => {
         />
       </section>
 
+      {/* 08 — HIGH RESILIENCE SLA & HEALTH COCKPIT */}
+      <SlaHealthCockpit />
+
       {/* Executive Report & Export Modal */}
       <ExecutiveExportModal
         isOpen={isExportModalOpen}
         onClose={() => setIsExportModalOpen(false)}
         data={data}
         periodLabel={activeRange.label}
+      />
+
+      {/* Official 1-Click Dossier Generator Modal */}
+      <ExecutiveDossierGenerator
+        isOpen={isDossierOpen}
+        onClose={() => setIsDossierOpen(false)}
+        data={data}
+        periodLabel={activeRange.label}
+      />
+
+      {/* PRISM Voice Studio Modal */}
+      <VoiceStudioModal
+        isOpen={isVoiceStudioOpen}
+        onClose={() => setIsVoiceStudioOpen(false)}
+        data={data}
       />
 
       {/* CloudWatch Alarms Modal */}
