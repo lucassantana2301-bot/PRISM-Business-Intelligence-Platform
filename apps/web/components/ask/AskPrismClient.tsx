@@ -1,361 +1,153 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
-import {
-  Send,
-  Sparkles,
-  Bot,
-  User,
-  RotateCcw,
-  Code2,
-  Calendar,
-  Layers,
-  ChevronDown,
-  ChevronUp,
-} from 'lucide-react';
-import {
-  ConversationContext,
-  VisualizationSpec,
-} from '@/lib/contracts/ask';
+import React, { useEffect, useRef, useState } from 'react';
+import { ArrowRight, RotateCcw, Send } from 'lucide-react';
+import { AskPrismResponse, ConversationContext } from '@/lib/contracts/ask';
 import { askPrism } from '@/lib/api/ask_client';
 import { VisualizationRenderer } from '@/components/visualization/VisualizationRenderer';
 import { VoiceInteractionButton } from '@/components/voice/VoiceInteractionButton';
+import { AnalyticalCoordinate } from '@/components/ui/AnalyticalCoordinate';
+import { formatExecutionTime, formatMetricValue } from '@/lib/utils/formatters';
 
-interface ChatMessage {
+interface RefractionTurn {
   id: string;
-  sender: 'user' | 'prism';
-  text: string;
-  timestamp: string;
-  visualization?: VisualizationSpec | null;
-  queryDetails?: {
-    metrics: string[];
-    dimensions: string[];
-    date_range: string;
-    execution_time_ms: number;
-  };
+  question: string;
+  response?: AskPrismResponse;
+  error?: string;
 }
 
-const SUGGESTED_QUERY_GROUPS = [
-  {
-    category: 'Monetization',
-    queries: [
-      'Qual foi o faturamento nos últimos 30 dias?',
-      'Como o faturamento deste mês compara com o mês anterior?',
-      'Qual região teve maior faturamento?',
-    ],
-  },
-  {
-    category: 'Conversion & Funnel',
-    queries: [
-      'Qual dispositivo teve a pior conversão?',
-      'Compare a conversão Mobile com Desktop.',
-      'Quantos pedidos tivemos este mês?',
-    ],
-  },
-  {
-    category: 'Marketing & Products',
-    queries: [
-      'Qual campanha teve melhor ROAS?',
-      'Mostre a receita por categoria.',
-      'Quais foram os produtos com maior receita?',
-    ],
-  },
+const suggestions = [
+  'Qual foi o faturamento nos últimos 30 dias?',
+  'Compare a conversão Mobile com Desktop.',
+  'Mostre a receita por categoria.',
 ];
 
+const NarrativeLine: React.FC<{ text: string }> = ({ text }) => (
+  <p>
+    {text.split('**').map((part, index) =>
+      index % 2 === 1 ? <strong key={`${part}-${index}`} className="font-semibold">{part}</strong> : part
+    )}
+  </p>
+);
+
 export const AskPrismClient: React.FC = () => {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [inputMessage, setInputMessage] = useState<string>('');
+  const [turns, setTurns] = useState<RefractionTurn[]>([]);
+  const [input, setInput] = useState('');
   const [context, setContext] = useState<ConversationContext | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [openInspectors, setOpenInspectors] = useState<Record<string, boolean>>({});
-
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages, isLoading]);
+    const initialQuestion = new URLSearchParams(window.location.search).get('q');
+    if (initialQuestion) setInput(initialQuestion);
+  }, []);
 
-  const toggleInspector = (id: string) => {
-    setOpenInspectors((prev) => ({ ...prev, [id]: !prev[id] }));
-  };
+  useEffect(() => {
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    endRef.current?.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'nearest' });
+  }, [turns, isLoading]);
 
-  const handleSendMessage = async (textToSend?: string) => {
-    const queryText = (textToSend || inputMessage).trim();
-    if (!queryText || isLoading) return;
-
-    const userMsgId = `user-${Date.now()}`;
-    const userMsg: ChatMessage = {
-      id: userMsgId,
-      sender: 'user',
-      text: queryText,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    };
-
-    setMessages((prev) => [...prev, userMsg]);
-    if (!textToSend) setInputMessage('');
+  const submit = async (candidate?: string) => {
+    const question = (candidate ?? input).trim();
+    if (!question || isLoading) return;
+    const id = `turn-${Date.now()}`;
+    setTurns((current) => [...current, { id, question }]);
+    setInput('');
     setIsLoading(true);
-
     try {
-      const response = await askPrism({
-        message: queryText,
-        context,
-      });
-
-      const prismMsgId = `prism-${Date.now()}`;
-      const prismMsg: ChatMessage = {
-        id: prismMsgId,
-        sender: 'prism',
-        text: response.answer,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        visualization: response.visualization,
-        queryDetails: {
-          metrics: response.intent.metrics,
-          dimensions: response.intent.dimensions,
-          date_range: `${response.intent.start_date} → ${response.intent.end_date}`,
-          execution_time_ms: response.execution_time_ms,
-        },
-      };
-
-      setMessages((prev) => [...prev, prismMsg]);
+      const response = await askPrism({ message: question, context });
+      setTurns((current) => current.map((turn) => turn.id === id ? { ...turn, response } : turn));
       setContext(response.context);
-    } catch (err: any) {
-      const errMsg: ChatMessage = {
-        id: `err-${Date.now()}`,
-        sender: 'prism',
-        text: `Desculpe, ocorreu um erro ao consultar o motor analítico: ${err.message}`,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      };
-      setMessages((prev) => [...prev, errMsg]);
+    } catch (caught) {
+      const error = caught instanceof Error ? caught.message : 'Falha ao consultar o motor analítico.';
+      setTurns((current) => current.map((turn) => turn.id === id ? { ...turn, error } : turn));
     } finally {
       setIsLoading(false);
       inputRef.current?.focus();
     }
   };
 
-  const handleResetContext = () => {
-    setContext(null);
-    setMessages([]);
-    setInputMessage('');
-    inputRef.current?.focus();
-  };
+  const reset = () => { setTurns([]); setContext(null); setInput(''); inputRef.current?.focus(); };
+  const latestAnswer = [...turns].reverse().find((turn) => turn.response)?.response?.answer ?? null;
 
   return (
-    <div className="flex flex-col h-[calc(100vh-11rem)] min-h-[580px] rounded-xl bg-prism-bg-card border border-prism-border-subtle shadow-prism-card overflow-hidden animate-fade-in">
-      {/* 1. Header Bar with Context Pills & Reset */}
-      <div className="flex items-center justify-between px-4 py-3 bg-prism-bg-base/80 border-b border-prism-border-subtle">
-        <div className="flex items-center gap-2 flex-wrap">
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-prism-bg-card border border-prism-border-subtle text-xs font-mono text-prism-text-primary shadow-sm">
-            <Bot className="w-3.5 h-3.5 text-prism-accent-blue" />
-            <span>Ask PRISM Core</span>
-          </div>
-
-          {context && context.turn_count > 0 && (
-            <>
-              {context.active_start_date && (
-                <span className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-mono bg-prism-bg-elevated text-prism-text-secondary border border-prism-border-subtle">
-                  <Calendar className="w-3 h-3 text-prism-accent-blue" />
-                  {context.active_start_date} → {context.active_end_date}
-                </span>
-              )}
-              {context.last_dimensions && context.last_dimensions.length > 0 && (
-                <span className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-mono bg-prism-bg-elevated text-prism-accent-purple border border-prism-border-subtle">
-                  <Layers className="w-3 h-3" />
-                  {context.last_dimensions.join(', ')}
-                </span>
-              )}
-              <span className="text-[10px] font-mono text-prism-text-muted px-1.5 py-0.5 rounded bg-prism-bg-base border border-prism-border-subtle">
-                Turn {context.turn_count}
-              </span>
-            </>
-          )}
+    <section className="prism-query-workspace prism-panel p-5 sm:p-8" aria-labelledby="query-workspace-title">
+      <header className="flex flex-col gap-5 border-b border-prism-hairline pb-6 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <AnalyticalCoordinate dimension="monetary">REFRACTION QUERY · LIVE ENGINE</AnalyticalCoordinate>
+          <h2 id="query-workspace-title" className="mt-2.5 text-2xl font-semibold tracking-[-0.03em] text-prism-ink sm:text-[1.625rem]">Da pergunta à evidência</h2>
+          <p className="mt-2.5 max-w-xl text-sm leading-6 text-prism-muted">Cada resposta expõe a interpretação do motor, os resultados calculados e a narrativa retornada.</p>
         </div>
+        <button type="button" onClick={reset} className="prism-secondary-button self-start text-prism-muted hover:text-prism-ink"><RotateCcw className="h-3.5 w-3.5" />Nova análise</button>
+      </header>
 
-        <button
-          type="button"
-          onClick={handleResetContext}
-          className="flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs text-prism-text-muted hover:text-prism-text-primary hover:bg-prism-bg-elevated border border-transparent hover:border-prism-border-subtle transition-all duration-150"
-          title="Clear conversational context and start new analysis"
-        >
-          <RotateCcw className="w-3.5 h-3.5" />
-          <span>New Analysis</span>
-        </button>
-      </div>
+      {turns.length === 0 && (
+        <div className="grid gap-px overflow-hidden rounded-xl border border-prism-hairline bg-prism-hairline mt-6 md:grid-cols-3">
+          {suggestions.map((suggestion, index) => <button key={suggestion} type="button" onClick={() => void submit(suggestion)} className="min-h-28 bg-white p-5 text-left transition-colors duration-150 hover:bg-prism-porcelain"><AnalyticalCoordinate>SRC.Q{index + 1}</AnalyticalCoordinate><span className="mt-3 block text-sm leading-5 text-prism-ink">{suggestion}</span></button>)}
+        </div>
+      )}
 
-      {/* 2. Messages Scroll Area */}
-      <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
-        {/* Empty State / Welcome Hero */}
-        {messages.length === 0 && (
-          <div className="py-6 max-w-3xl mx-auto space-y-6">
-            <div className="text-center space-y-2">
-              <div className="inline-flex p-3 rounded-2xl bg-prism-accent-blue/10 border border-prism-accent-blue/30 text-prism-accent-blue mb-1">
-                <Sparkles className="w-6 h-6" />
-              </div>
-              <h3 className="text-base font-semibold text-prism-text-primary tracking-tight">
-                Conversational Business Intelligence
-              </h3>
-              <p className="text-xs text-prism-text-secondary max-w-md mx-auto">
-                Ask analytical questions in natural language. Queries are deterministically compiled and executed by the DuckDB Semantic Analytics Engine.
-              </p>
-            </div>
-
-            {/* Suggested Question Category Groups */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
-              {SUGGESTED_QUERY_GROUPS.map((group) => (
-                <div
-                  key={group.category}
-                  className="p-3.5 rounded-xl bg-prism-bg-base/70 border border-prism-border-subtle space-y-2"
-                >
-                  <span className="text-[10px] font-mono uppercase tracking-wider text-prism-accent-blue font-semibold">
-                    {group.category}
-                  </span>
-                  <div className="space-y-1.5">
-                    {group.queries.map((q, idx) => (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={() => handleSendMessage(q)}
-                        className="w-full text-left p-2 rounded-lg bg-prism-bg-card hover:bg-prism-bg-elevated border border-prism-border-subtle/80 hover:border-prism-border-hover text-[11px] text-prism-text-secondary hover:text-prism-text-primary transition-all line-clamp-2"
-                      >
-                        {q}
-                      </button>
-                    ))}
-                  </div>
+      <div className="divide-y divide-prism-hairline" aria-live="polite">
+        {turns.map((turn, index) => {
+          const response = turn.response;
+          const summaries = response?.result ? Object.values(response.result.metrics_summary) : [];
+          return (
+            <article key={turn.id} className="py-8 sm:py-10">
+              <div className="grid gap-8 xl:grid-cols-[minmax(15rem,.72fr)_2rem_minmax(0,1.6fr)]">
+                <div>
+                  <AnalyticalCoordinate dimension="monetary">SRC.Q{index + 1} · QUESTION</AnalyticalCoordinate>
+                  <p className="mt-5 text-xl font-semibold leading-8 tracking-[-0.025em] text-prism-ink">{turn.question}</p>
+                  {response && <p className="mt-6 font-mono text-[10px] text-prism-muted">TURN {response.context.turn_count} · {formatExecutionTime(response.execution_time_ms)}</p>}
                 </div>
-              ))}
-            </div>
-          </div>
-        )}
+                <div className="hidden items-center justify-center xl:flex" aria-hidden="true"><div className="h-full w-px bg-prism-hairline" /><ArrowRight className="absolute h-4 w-4 bg-prism-porcelain text-prism-indigo" /></div>
+                <div className="min-w-0">
+                  {!response && !turn.error && <div className="prism-processing" role="status"><span className="h-2 w-2 bg-prism-indigo" /><span>PRISM está decompondo a pergunta…</span></div>}
+                  {turn.error && <div role="alert" className="rounded-lg border-l-2 border-prism-negative bg-red-50 p-4 text-xs leading-5 text-red-800"><AnalyticalCoordinate>QUERY ERROR</AnalyticalCoordinate><p className="mt-2">{turn.error}</p></div>}
+                  {response && (
+                    <div className="space-y-8">
+                      <section aria-labelledby={`${turn.id}-analysis`}>
+                        <AnalyticalCoordinate dimension="behavioral">ANL.{String(index + 1).padStart(2, '0')} · ANALYSIS</AnalyticalCoordinate>
+                        <h3 id={`${turn.id}-analysis`} className="sr-only">Análise da pergunta</h3>
+                        <p className="mt-3 text-sm font-medium text-prism-ink">{response.intent.intent_summary}</p>
+                        <dl className="mt-4 grid gap-px overflow-hidden rounded-lg border border-prism-hairline bg-prism-hairline sm:grid-cols-3">
+                          <div className="bg-white p-3"><dt className="query-term">Métricas</dt><dd className="query-value">{response.intent.metrics.join(', ') || 'Nenhuma'}</dd></div>
+                          <div className="bg-white p-3"><dt className="query-term">Dimensões</dt><dd className="query-value">{response.intent.dimensions.join(', ') || 'Nenhuma'}</dd></div>
+                          <div className="bg-white p-3"><dt className="query-term">Janela</dt><dd className="query-value">{response.intent.start_date} → {response.intent.end_date}</dd></div>
+                        </dl>
+                      </section>
 
-        {/* Message Thread */}
-        {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={`flex gap-3 ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-          >
-            {msg.sender === 'prism' && (
-              <div className="w-8 h-8 rounded-xl bg-prism-accent-blue/15 border border-prism-accent-blue/30 text-prism-accent-blue flex items-center justify-center flex-shrink-0 mt-0.5 shadow-sm">
-                <Bot className="w-4 h-4" />
-              </div>
-            )}
+                      <section aria-labelledby={`${turn.id}-evidence`}>
+                        <AnalyticalCoordinate dimension="structural">EVD.{String(index + 1).padStart(2, '0')} · EVIDENCE</AnalyticalCoordinate>
+                        <h3 id={`${turn.id}-evidence`} className="sr-only">Evidências retornadas</h3>
+                        {summaries.length > 0 && <div className="mt-4 grid gap-px overflow-hidden rounded-lg border border-prism-hairline bg-prism-hairline sm:grid-cols-2">{summaries.map((summary) => <div key={summary.metric_id} className="bg-white p-4"><p className="query-term">{summary.metric_id.replaceAll('_', ' ')}</p><p className="mt-2 text-xl font-semibold text-prism-ink tabular-nums">{formatMetricValue(summary.current_value, summary.format_type)}</p></div>)}</div>}
+                        {response.visualization ? <div className="mt-4 rounded-lg border border-prism-hairline p-4"><VisualizationRenderer spec={response.visualization} /></div> : <p className="mt-3 text-xs text-prism-muted">Nenhuma visualização foi necessária para este resultado.</p>}
+                      </section>
 
-            <div
-              className={`max-w-2xl space-y-3 ${
-                msg.sender === 'user'
-                  ? 'bg-prism-accent-blue text-black font-medium p-4 rounded-2xl rounded-tr-sm text-xs shadow-md'
-                  : 'bg-prism-bg-base/90 border border-prism-border-subtle p-5 rounded-2xl rounded-tl-sm text-xs text-prism-text-primary shadow-prism-card'
-              }`}
-            >
-              <div className="leading-relaxed">
-                {msg.text.split('\n').map((line, idx) => (
-                  <p key={idx} className={idx > 0 ? 'mt-2' : ''}>
-                    {line.split('**').map((part, pIdx) =>
-                      pIdx % 2 === 1 ? (
-                        <strong key={pIdx} className={msg.sender === 'user' ? 'font-bold' : 'text-prism-text-primary font-semibold'}>
-                          {part}
-                        </strong>
-                      ) : (
-                        part
-                      )
-                    )}
-                  </p>
-                ))}
-              </div>
-
-              {/* Render dynamic visual response if attached */}
-              {msg.visualization && (
-                <div className="mt-4 pt-3 border-t border-prism-border-subtle/60">
-                  <VisualizationRenderer spec={msg.visualization} />
-                </div>
-              )}
-
-              {/* Query Inspector Pill */}
-              {msg.queryDetails && (
-                <div className="pt-3 border-t border-prism-border-subtle/50 text-[11px] font-mono">
-                  <button
-                    type="button"
-                    onClick={() => toggleInspector(msg.id)}
-                    className="flex items-center gap-1.5 text-prism-text-muted hover:text-prism-text-primary transition-colors"
-                  >
-                    <Code2 className="w-3.5 h-3.5 text-prism-accent-blue" />
-                    <span>Engine Provenance ({msg.queryDetails.execution_time_ms}ms)</span>
-                    {openInspectors[msg.id] ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                  </button>
-
-                  {openInspectors[msg.id] && (
-                    <div className="mt-2.5 p-3 rounded-lg bg-prism-bg-card border border-prism-border-subtle space-y-1.5 text-[10px] text-prism-text-muted">
-                      <div><strong className="text-prism-text-secondary">Metrics:</strong> {msg.queryDetails.metrics.join(', ')}</div>
-                      <div><strong className="text-prism-text-secondary">Dimensions:</strong> {msg.queryDetails.dimensions.length ? msg.queryDetails.dimensions.join(', ') : 'None'}</div>
-                      <div><strong className="text-prism-text-secondary">Window:</strong> {msg.queryDetails.date_range}</div>
+                      <section className="border-l-2 border-prism-indigo pl-5" aria-labelledby={`${turn.id}-decision`}>
+                        <AnalyticalCoordinate dimension="monetary">DEC.{String(index + 1).padStart(2, '0')} · DECISION</AnalyticalCoordinate>
+                        <h3 id={`${turn.id}-decision`} className="sr-only">Conclusão retornada pelo PRISM</h3>
+                        <div className="mt-4 space-y-2 text-base font-medium leading-7 text-prism-ink">{response.answer.split('\n').map((line, lineIndex) => <NarrativeLine key={lineIndex} text={line} />)}</div>
+                        <p className="mt-4 font-mono text-[9px] uppercase tracking-[0.12em] text-prism-muted">Narrativa retornada pelo motor PRISM · confiança {(response.confidence * 100).toFixed(0)}%</p>
+                      </section>
                     </div>
                   )}
                 </div>
-              )}
-            </div>
-
-            {msg.sender === 'user' && (
-              <div className="w-8 h-8 rounded-xl bg-prism-bg-elevated border border-prism-border-subtle text-prism-text-secondary flex items-center justify-center flex-shrink-0 mt-0.5 shadow-sm">
-                <User className="w-4 h-4" />
               </div>
-            )}
-          </div>
-        ))}
-
-        {/* Typing Indicator */}
-        {isLoading && (
-          <div className="flex gap-3 justify-start animate-fade-in">
-            <div className="w-8 h-8 rounded-xl bg-prism-accent-blue/15 border border-prism-accent-blue/30 text-prism-accent-blue flex items-center justify-center flex-shrink-0">
-              <Bot className="w-4 h-4" />
-            </div>
-            <div className="p-4 rounded-2xl rounded-tl-sm bg-prism-bg-base border border-prism-border-subtle flex items-center gap-2.5 shadow-sm">
-              <div className="w-2 h-2 rounded-full bg-prism-accent-blue animate-bounce" />
-              <div className="w-2 h-2 rounded-full bg-prism-accent-blue animate-bounce [animation-delay:0.2s]" />
-              <div className="w-2 h-2 rounded-full bg-prism-accent-blue animate-bounce [animation-delay:0.4s]" />
-              <span className="text-[11px] font-mono text-prism-text-muted ml-1.5">Executing analytical query plan...</span>
-            </div>
-          </div>
-        )}
-
-        <div ref={messagesEndRef} />
+            </article>
+          );
+        })}
+        <div ref={endRef} />
       </div>
 
-      {/* 3. Input Footer Bar */}
-      <div className="p-3.5 bg-prism-bg-base border-t border-prism-border-subtle">
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleSendMessage();
-          }}
-          className="flex items-center gap-2"
-        >
-          <input
-            ref={inputRef}
-            type="text"
-            placeholder="Ask a business question (e.g., 'Qual foi o faturamento nos últimos 30 dias?')..."
-            value={inputMessage}
-            disabled={isLoading}
-            onChange={(e) => setInputMessage(e.target.value)}
-            className="flex-1 bg-prism-bg-card border border-prism-border-subtle rounded-xl px-4 py-2.5 text-xs text-prism-text-primary placeholder:text-prism-text-muted focus:outline-none focus:border-prism-accent-blue font-mono disabled:opacity-50 transition-colors"
-          />
-          <VoiceInteractionButton
-            onTranscriptComplete={(transcript) => handleSendMessage(transcript)}
-            isEngineBusy={isLoading}
-            latestAnswer={messages.length > 0 && messages[messages.length - 1].sender === 'prism' ? messages[messages.length - 1].text : null}
-          />
-          <button
-            type="submit"
-            disabled={!inputMessage.trim() || isLoading}
-            className="p-2.5 rounded-xl bg-prism-accent-blue text-black hover:bg-blue-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center shadow-sm"
-            aria-label="Send query"
-          >
-            <Send className="w-4 h-4" />
-          </button>
+      <footer className="mt-8 border-t border-prism-hairline pt-6">
+        <form onSubmit={(event) => { event.preventDefault(); void submit(); }} className="flex items-center gap-2">
+          <label htmlFor="prism-question" className="sr-only">Pergunte ao PRISM</label>
+          <input id="prism-question" ref={inputRef} value={input} disabled={isLoading} onChange={(event) => setInput(event.target.value)} placeholder="Faça uma pergunta sobre o negócio…" className="h-12 min-w-0 flex-1 rounded-lg border border-prism-hairline bg-white px-4 text-sm text-prism-ink outline-none placeholder:text-prism-muted focus:border-prism-indigo disabled:opacity-60" />
+          <VoiceInteractionButton onTranscriptComplete={(transcript) => void submit(transcript)} isEngineBusy={isLoading} latestAnswer={latestAnswer} />
+          <button type="submit" disabled={!input.trim() || isLoading} className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-prism-indigo text-white transition-colors duration-150 hover:bg-prism-accent-blueDark disabled:cursor-not-allowed disabled:opacity-40" aria-label="Executar pergunta"><Send className="h-4 w-4" /></button>
         </form>
-      </div>
-    </div>
+      </footer>
+    </section>
   );
 };

@@ -86,7 +86,7 @@ export const Skeleton: React.FC<SkeletonProps> = ({ className }) => {
   return (
     <div
       className={clsx(
-        'animate-pulse rounded bg-prism-bg-elevated/70 border border-prism-border-subtle/40',
+        'animate-pulse bg-prism-porcelain border border-prism-hairline',
         className
       )}
     />

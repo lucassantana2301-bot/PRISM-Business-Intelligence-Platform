@@ -11,6 +11,7 @@ import {
   CartesianGrid,
 } from 'recharts';
 import { TimeGrain } from '@/lib/contracts/analytics';
+import { AnalyticalCoordinate } from '@/components/ui/AnalyticalCoordinate';
 import { formatCurrency, formatInteger } from '@/lib/utils/formatters';
 import clsx from 'clsx';
 
@@ -30,6 +31,52 @@ export interface RevenueTrendCardProps {
   isLoading?: boolean;
 }
 
+const MONTH_ABBR_PT = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+
+function formatAxisDate(raw: string): string {
+  if (!raw) return '';
+  const parts = raw.split('-');
+  if (parts.length === 3) {
+    const day = parseInt(parts[2], 10);
+    const month = MONTH_ABBR_PT[parseInt(parts[1], 10) - 1];
+    return month ? `${day} ${month}` : raw;
+  }
+  if (parts.length === 2) {
+    return MONTH_ABBR_PT[parseInt(parts[1], 10) - 1] ?? raw;
+  }
+  return raw;
+}
+
+interface ToggleGroupProps<T extends string> {
+  options: { id: T; label: string }[];
+  value: T;
+  onChange: (value: T) => void;
+  ariaLabel: string;
+}
+
+function ToggleGroup<T extends string>({ options, value, onChange, ariaLabel }: ToggleGroupProps<T>) {
+  return (
+    <div role="group" aria-label={ariaLabel} className="inline-flex overflow-hidden rounded-lg border border-slate-200/80 bg-slate-50/70 p-0.5">
+      {options.map((opt) => (
+        <button
+          key={opt.id}
+          type="button"
+          onClick={() => onChange(opt.id)}
+          aria-pressed={value === opt.id}
+          className={clsx(
+            'px-2.5 py-1 text-xs font-medium rounded-md transition-all duration-150',
+            value === opt.id
+              ? 'bg-slate-900 text-white font-semibold shadow-xs'
+              : 'text-slate-500 hover:text-slate-900'
+          )}
+        >
+          {opt.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 export const RevenueTrendCard: React.FC<RevenueTrendCardProps> = ({
   data,
   timeGrain,
@@ -46,85 +93,58 @@ export const RevenueTrendCard: React.FC<RevenueTrendCardProps> = ({
     year: 'ano',
   };
 
-
   return (
-    <div className="p-6 rounded-2xl bg-white border border-slate-100 shadow-xs flex flex-col justify-between">
-      {/* Header with Title & Granularity / Metric Toggles */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+    <div className="flex flex-col justify-between p-6 sm:p-8 h-full">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
         <div>
-          <h3 className="text-base font-bold text-slate-900 font-sans">
-            Receita e trajetória de crescimento
+          <AnalyticalCoordinate dimension="monetary">EVD.02 · TREND</AnalyticalCoordinate>
+          <h3 className="mt-1.5 text-lg font-bold tracking-tight text-slate-900">
+            Receita e Trajetória de Crescimento
           </h3>
-          <p className="text-xs text-slate-500 font-sans mt-0.5">
+          <p className="mt-0.5 text-xs text-slate-500">
             Séries temporais canônicas agregadas por {grainLabels[timeGrain]}
           </p>
         </div>
 
         <div className="flex items-center gap-2.5 flex-wrap">
-          {/* Time Grain selector */}
-          <div className="inline-flex p-1 rounded-xl bg-slate-100/80 border border-slate-200/60">
-            {[
+          <ToggleGroup
+            ariaLabel="Granularidade temporal"
+            value={timeGrain}
+            onChange={onTimeGrainChange}
+            options={[
               { id: 'day', label: 'Dia' },
               { id: 'week', label: 'Semana' },
               { id: 'month', label: 'Mês' },
-            ].map((opt) => (
-              <button
-                key={opt.id}
-                type="button"
-                onClick={() => onTimeGrainChange(opt.id as TimeGrain)}
-                className={clsx(
-                  'px-3 py-1 text-xs font-semibold rounded-lg transition-all',
-                  timeGrain === opt.id
-                    ? 'bg-blue-600 text-white shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900'
-                )}
-              >
-                {opt.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Metric toggle */}
-          <div className="inline-flex p-1 rounded-xl bg-slate-100/80 border border-slate-200/60">
-            {[
+            ]}
+          />
+          <ToggleGroup
+            ariaLabel="Métrica exibida"
+            value={metricView}
+            onChange={setMetricView}
+            options={[
               { id: 'revenue', label: 'Receita' },
               { id: 'orders', label: 'Pedidos' },
-            ].map((opt) => (
-              <button
-                key={opt.id}
-                type="button"
-                onClick={() => setMetricView(opt.id as 'revenue' | 'orders')}
-                className={clsx(
-                  'px-3 py-1 text-xs font-semibold rounded-lg transition-all',
-                  metricView === opt.id
-                    ? 'bg-blue-600 text-white shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900'
-                )}
-              >
-                {opt.label}
-              </button>
-            ))}
-          </div>
+            ]}
+          />
         </div>
       </div>
 
-      {/* Chart Area */}
       <div className="h-72 w-full">
         {isLoading ? (
-          <div className="h-full w-full flex items-center justify-center animate-pulse bg-slate-50 rounded-xl">
-            <span className="text-xs font-sans text-slate-400">Carregando dados agregados...</span>
+          <div className="h-full w-full flex items-center justify-center rounded-xl bg-slate-50 animate-pulse">
+            <span className="text-xs text-slate-400">Carregando dados agregados...</span>
           </div>
         ) : data.length === 0 ? (
-          <div className="h-full flex items-center justify-center text-xs text-slate-400 font-sans">
+          <div className="h-full flex items-center justify-center text-xs text-slate-400">
             Nenhum dado de trajetória no período selecionado
           </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
               <defs>
-                <linearGradient id="execRevenueGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#2563eb" stopOpacity={0.25} />
-                  <stop offset="95%" stopColor="#2563eb" stopOpacity={0.0} />
+                <linearGradient id="revenueTrendFill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#5361ff" stopOpacity={0.16} />
+                  <stop offset="100%" stopColor="#5361ff" stopOpacity={0.0} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
@@ -134,50 +154,48 @@ export const RevenueTrendCard: React.FC<RevenueTrendCardProps> = ({
                 fontSize={11}
                 tickLine={false}
                 axisLine={{ stroke: '#e2e8f0' }}
-                tickFormatter={(d) => {
-                  if (!d) return '';
-                  const parts = d.split('-');
-                  if (parts.length === 3) {
-                    const day = parseInt(parts[2], 10);
-                    return `${day} out`;
-                  }
-                  return d;
-                }}
+                tickFormatter={formatAxisDate}
               />
               <YAxis
                 stroke="#94a3b8"
                 fontSize={11}
                 tickLine={false}
-                axisLine={{ stroke: '#e2e8f0' }}
+                axisLine={false}
+                width={48}
                 tickFormatter={(val) =>
                   metricView === 'revenue' ? `$${(val / 1000).toFixed(1)}k` : `${val}`
                 }
               />
               <Tooltip
+                cursor={{ stroke: '#cbd5e1', strokeWidth: 1, strokeDasharray: '4 4' }}
                 formatter={(val: any) => [
                   metricView === 'revenue' ? formatCurrency(Number(val)) : formatInteger(Number(val)),
                   metricView === 'revenue' ? 'Receita' : 'Pedidos',
                 ]}
-                labelFormatter={(l) => `${l}`}
+                labelFormatter={(l) => formatAxisDate(String(l))}
                 contentStyle={{
-                  backgroundColor: '#ffffff',
-                  borderColor: '#e2e8f0',
-                  borderRadius: '12px',
-                  boxShadow: '0 4px 12px rgba(15, 23, 42, 0.08)',
+                  backgroundColor: '#080c16',
+                  border: '1px solid #1e293b',
+                  borderRadius: '8px',
+                  boxShadow: '0 12px 28px -8px rgba(0, 0, 0, 0.4)',
                   fontSize: '12px',
-                  color: '#0f172a',
-                  fontWeight: '600',
+                  color: '#f8fafc',
+                  fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, monospace',
                   padding: '8px 12px',
                 }}
+                labelStyle={{ color: '#94a3b8', fontSize: '10px', marginBottom: '4px' }}
               />
               <Area
                 type="monotone"
                 dataKey={metricView === 'revenue' ? 'net_revenue' : 'orders'}
-                stroke="#2563eb"
-                strokeWidth={2.5}
+                stroke="#5361ff"
+                strokeWidth={2.25}
                 fillOpacity={1}
-                fill="url(#execRevenueGradient)"
-                activeDot={{ r: 6, fill: '#2563eb', stroke: '#ffffff', strokeWidth: 2 }}
+                fill="url(#revenueTrendFill)"
+                activeDot={{ r: 4, fill: '#5361ff', stroke: '#FFFFFF', strokeWidth: 2 }}
+                isAnimationActive={!isLoading}
+                animationDuration={280}
+                animationEasing="ease-out"
               />
             </AreaChart>
           </ResponsiveContainer>

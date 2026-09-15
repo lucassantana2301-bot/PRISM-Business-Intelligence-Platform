@@ -76,3 +76,11 @@ export function formatDelta(
   }
   return `${sign}${delta.toFixed(2)}`;
 }
+
+export function formatExecutionTime(ms: number | null | undefined): string {
+  if (ms === null || ms === undefined || isNaN(ms)) return 'Indisponível';
+  if (ms >= 1000) {
+    return `${(ms / 1000).toFixed(2)} s`;
+  }
+  return `${Math.round(ms).toLocaleString('en-US')} ms`;
+}

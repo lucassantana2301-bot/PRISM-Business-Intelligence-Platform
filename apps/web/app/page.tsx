@@ -1,11 +1,11 @@
 import React from 'react';
-import { OverviewDashboardClient } from '@/components/overview/OverviewDashboardClient';
+import { PrismExperience } from '@/components/experience/PrismExperience';
 
-export default function ExecutiveOverviewPage() {
-  return (
-    <div className="space-y-6">
-      <OverviewDashboardClient />
-    </div>
-  );
+export const metadata = {
+  title: 'PRISM — Cinematic Product Experience',
+  description: 'Ask. Understand. Decide. Modern data intelligence and conversational analytics.',
+};
+
+export default function LandingExperiencePage() {
+  return <PrismExperience />;
 }
-

@@ -1,7 +1,8 @@
 'use client';
 
 import React from 'react';
-import { formatCurrency } from '@/lib/utils/formatters';
+import { AnalyticalCoordinate } from '@/components/ui/AnalyticalCoordinate';
+import { formatCurrency, formatPercentage } from '@/lib/utils/formatters';
 
 export interface CategoryDataRow {
   category: string;
@@ -17,76 +18,66 @@ interface CategoryBreakdownCardProps {
   isLoading?: boolean;
 }
 
-const CATEGORY_COLORS: Record<string, string> = {
-  'Electronics': '#2563eb', // blue
-  'Eletrônica': '#2563eb',
-  'Home & Kitchen': '#0d9488', // teal
-  'Casa e Decoração': '#0d9488',
-  'Apparel': '#8b5cf6', // purple
-  'Roupas e Acessórios': '#8b5cf6',
-  'Beauty': '#f59e0b', // amber
-  'Beleza e Saúde': '#f59e0b',
-  'Sports': '#84cc16', // lime/olive
-  'Esporte e Lazer': '#84cc16',
-  'Other': '#64748b', // slate
-  'Outros': '#64748b',
-};
+const RANK_OPACITY = [1, 0.8, 0.65, 0.5, 0.35];
 
 export const CategoryBreakdownCard: React.FC<CategoryBreakdownCardProps> = ({
   data,
   isLoading = false,
 }) => {
   return (
-    <div className="p-6 rounded-2xl bg-white border border-slate-100 shadow-xs flex flex-col justify-between h-full">
-      {/* Header */}
-      <div className="mb-4">
-        <h3 className="text-base font-bold text-slate-900 font-sans">
-          Receita por categoria
+    <div className="flex h-full flex-col justify-between p-6 sm:p-8">
+      <div className="mb-6">
+        <AnalyticalCoordinate dimension="structural">EVD.03 · STRUCTURE</AnalyticalCoordinate>
+        <h3 className="mt-1.5 text-lg font-bold tracking-tight text-slate-900">
+          Receita por Categoria
         </h3>
-        <p className="text-xs text-slate-500 font-sans mt-0.5">
+        <p className="mt-0.5 text-xs text-slate-500">
           Distribuição canônica da receita bruta entre os departamentos
         </p>
       </div>
 
-      {/* Progress Bars List */}
       <div className="flex-1 flex flex-col justify-around min-h-[240px]">
         {isLoading ? (
           <div className="space-y-4 animate-pulse">
             {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="space-y-1.5">
-                <div className="h-3.5 bg-slate-100 rounded w-1/3" />
-                <div className="h-2.5 bg-slate-100 rounded-full w-full" />
+              <div key={i} className="space-y-2">
+                <div className="h-3.5 w-1/3 bg-slate-100 rounded" />
+                <div className="h-2 w-full bg-slate-100 rounded" />
               </div>
             ))}
           </div>
         ) : data.length === 0 ? (
-          <div className="h-full flex items-center justify-center text-xs text-slate-400 font-sans">
+          <div className="h-full flex items-center justify-center text-xs text-slate-400">
             Nenhuma receita de categoria no período
           </div>
         ) : (
-          <div className="space-y-3.5">
-            {data.map((cat, idx) => {
-              const barColor = cat.color || CATEGORY_COLORS[cat.name] || CATEGORY_COLORS[cat.category] || '#2563eb';
-              return (
-                <div key={cat.category || idx} className="space-y-1.5">
-                  <div className="flex items-center justify-between text-xs font-sans">
-                    <span className="text-slate-700 font-semibold truncate">{cat.name}</span>
-                    <span className="text-slate-900 font-bold font-sans">
-                      US$ {(cat.revenue / 1000).toFixed(1)} mil <span className="text-slate-500 font-normal">({cat.share}%)</span>
+          <div className="space-y-4">
+            {data.map((cat, idx) => (
+              <div key={cat.category || idx} className="space-y-1.5 group">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-slate-800 font-semibold truncate group-hover:text-prism-indigo transition-colors">
+                    {cat.name}
+                  </span>
+                  <div className="flex items-center gap-2 font-mono tabular-nums text-[11px]">
+                    <span className="font-semibold text-slate-900">
+                      {formatCurrency(cat.revenue)}
+                    </span>
+                    <span className="text-slate-400 font-normal">
+                      ({formatPercentage(cat.share)})
                     </span>
                   </div>
-                  <div className="w-full h-2 rounded-full bg-slate-100 overflow-hidden">
-                    <div
-                      className="h-full rounded-full transition-all duration-500"
-                      style={{
-                        width: `${Math.min(cat.share, 100)}%`,
-                        backgroundColor: barColor,
-                      }}
-                    />
-                  </div>
                 </div>
-              );
-            })}
+                <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100 p-0.5">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-sky-500 to-indigo-600 transition-all duration-300 ease-out"
+                    style={{
+                      width: `${Math.min(cat.share, 100)}%`,
+                      opacity: RANK_OPACITY[idx] ?? RANK_OPACITY[RANK_OPACITY.length - 1],
+                    }}
+                  />
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>

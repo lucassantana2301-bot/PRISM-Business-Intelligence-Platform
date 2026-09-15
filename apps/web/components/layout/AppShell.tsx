@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
 import { CommandPalette } from './CommandPalette';
@@ -10,6 +11,9 @@ export interface AppShellProps {
 }
 
 export const AppShell: React.FC<AppShellProps> = ({ children }) => {
+  const pathname = usePathname();
+  const isLandingExperience = pathname === '/';
+
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
@@ -27,6 +31,14 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
+  if (isLandingExperience) {
+    return (
+      <div className="min-h-screen bg-[#07090E] text-prism-text-primary overflow-x-hidden font-sans">
+        {children}
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-prism-bg-canvas text-prism-text-primary flex overflow-x-hidden font-sans">
       {/* Desktop Sidebar */}
@@ -40,7 +52,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
       {/* Mobile Drawer Backdrop */}
       {mobileMenuOpen && (
         <div
-          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm lg:hidden transition-opacity"
+          className="fixed inset-0 z-50 bg-black/80 lg:hidden transition-opacity"
           onClick={() => setMobileMenuOpen(false)}
         >
           <div
@@ -57,13 +69,13 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
       )}
 
       {/* Main Content Layout */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 bg-[#f8f9fc]">
         <Topbar
           onOpenCommandPalette={() => setCommandPaletteOpen(true)}
           onMobileMenuToggle={() => setMobileMenuOpen((prev) => !prev)}
         />
 
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-[1600px] w-full mx-auto space-y-6">
+        <main className="flex-1 px-6 sm:px-8 lg:px-12 py-8 max-w-[1720px] w-full mx-auto">
           {children}
         </main>
       </div>

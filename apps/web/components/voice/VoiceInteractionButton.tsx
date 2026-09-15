@@ -112,26 +112,21 @@ export const VoiceInteractionButton: React.FC<VoiceInteractionButtonProps> = ({
     <div className={`relative flex items-center gap-2 ${className}`}>
       {/* Live Transcript Preview Toast */}
       {voiceState === 'listening' && (
-        <div className="absolute bottom-14 right-0 w-72 p-3.5 rounded-xl bg-prism-bg-card/95 border border-prism-accent-blue/50 shadow-prism-elevated backdrop-blur-md text-xs text-prism-text-primary animate-fade-in z-30 space-y-2">
-          <div className="flex items-center justify-between pb-1.5 border-b border-prism-border-subtle text-[11px] font-mono text-prism-accent-blue">
+        <div className="absolute bottom-14 right-0 z-30 w-72 space-y-2 rounded-lg border border-prism-hairline bg-white p-3.5 text-xs text-prism-ink shadow-lg animate-fade-in">
+          <div className="flex items-center justify-between pb-1.5 border-b border-prism-hairline text-[11px] font-mono text-prism-indigo">
             <span className="flex items-center gap-2">
-              {/* Animated Mini Equalizer Bars */}
-              <span className="flex items-end gap-0.5 h-3">
-                <span className="w-1 bg-prism-accent-blue rounded-full animate-bounce h-2" />
-                <span className="w-1 bg-prism-accent-blue rounded-full animate-bounce h-3 [animation-delay:0.15s]" />
-                <span className="w-1 bg-prism-accent-blue rounded-full animate-bounce h-1.5 [animation-delay:0.3s]" />
-              </span>
+              <span className="h-2 w-2 rounded-full bg-prism-indigo" />
               <span>Listening for query...</span>
             </span>
             <button
               type="button"
               onClick={handleCancelListening}
-              className="text-prism-text-muted hover:text-prism-text-primary transition-colors text-[10px]"
+              className="text-prism-muted hover:text-prism-ink transition-colors duration-150 text-[10px]"
             >
               Cancel
             </button>
           </div>
-          <p className="font-mono text-xs italic text-prism-text-secondary line-clamp-3 leading-relaxed">
+          <p className="font-mono text-xs italic text-prism-textSecondary line-clamp-3 leading-relaxed">
             {liveTranscript || 'Speak your business question now...'}
           </p>
         </div>
@@ -139,7 +134,7 @@ export const VoiceInteractionButton: React.FC<VoiceInteractionButtonProps> = ({
 
       {/* Error Toast */}
       {voiceState === 'error' && errorMessage && (
-        <div className="absolute bottom-14 right-0 w-64 p-2.5 rounded-xl bg-rose-950/90 border border-rose-800/60 text-[11px] font-mono text-rose-300 flex items-center gap-2 z-30 shadow-prism-elevated">
+        <div className="absolute bottom-14 right-0 z-30 flex w-64 items-center gap-2 rounded-lg border border-rose-300 bg-rose-50 p-2.5 font-mono text-[11px] text-rose-800 shadow-lg">
           <AlertCircle className="w-4 h-4 flex-shrink-0 text-rose-400" />
           <span className="truncate">{errorMessage}</span>
         </div>
@@ -149,10 +144,10 @@ export const VoiceInteractionButton: React.FC<VoiceInteractionButtonProps> = ({
       <button
         type="button"
         onClick={toggleMute}
-        className={`p-2.5 rounded-xl border transition-all duration-150 ${
+        className={`h-12 w-12 rounded-lg border transition-colors duration-150 ${
           isMuted
-            ? 'text-prism-text-muted hover:text-prism-text-primary bg-prism-bg-base border-prism-border-subtle hover:border-prism-border-hover'
-            : 'text-prism-accent-blue hover:text-blue-300 bg-prism-accent-blue/10 border-prism-accent-blue/30 shadow-sm'
+            ? 'text-prism-muted hover:text-prism-ink bg-prism-porcelain border-prism-hairline hover:border-prism-hairlineHover'
+            : 'text-prism-indigo bg-white border-prism-hairline'
         }`}
         title={isMuted ? 'Unmute voice answers' : 'Mute voice answers'}
         aria-label={isMuted ? 'Unmute voice output' : 'Mute voice output'}
@@ -165,7 +160,7 @@ export const VoiceInteractionButton: React.FC<VoiceInteractionButtonProps> = ({
         <button
           type="button"
           onClick={handleCancelListening}
-          className="relative p-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white transition-all shadow-lg flex items-center justify-center animate-pulse"
+          className="relative flex h-12 w-12 items-center justify-center rounded-lg bg-rose-600 text-white transition-colors duration-150 hover:bg-rose-500"
           title="Stop listening"
           aria-label="Stop microphone"
         >
@@ -176,16 +171,16 @@ export const VoiceInteractionButton: React.FC<VoiceInteractionButtonProps> = ({
           type="button"
           onClick={handleStartListening}
           disabled={isEngineBusy}
-          className={`relative p-2.5 rounded-xl border transition-all duration-150 flex items-center justify-center ${
+          className={`relative flex h-12 w-12 items-center justify-center rounded-lg border transition-colors duration-150 ${
             voiceState === 'responding'
-              ? 'bg-purple-600/20 text-purple-400 border-purple-500/40 animate-pulse shadow-sm'
-              : 'bg-prism-bg-card hover:bg-prism-bg-elevated text-prism-text-secondary hover:text-prism-text-primary border-prism-border-subtle hover:border-prism-border-hover shadow-sm'
+              ? 'bg-prism-porcelain text-prism-violet border-prism-violet'
+              : 'bg-white hover:bg-prism-porcelain text-prism-textSecondary hover:text-prism-ink border-prism-hairline hover:border-prism-hairlineHover'
           } disabled:opacity-40 disabled:cursor-not-allowed`}
           title="Talk to PRISM (Voice Query)"
           aria-label="Activate voice input"
         >
           {voiceState === 'responding' ? (
-            <Volume2 className="w-4 h-4 text-purple-400" />
+            <Volume2 className="w-4 h-4 text-prism-violet" />
           ) : (
             <Mic className="w-4 h-4" />
           )}
