@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { AlertCircle, Clock, Database, RefreshCw, Zap } from 'lucide-react';
+import { AlertCircle, Clock, Database, RefreshCw, Zap, Bell, Sparkles } from 'lucide-react';
 import { DateRangePreset, DATE_PRESETS, DateRangeSelector } from './DateRangeSelector';
 import { RevenueTrendCard } from './RevenueTrendCard';
 import { CategoryBreakdownCard } from './CategoryBreakdownCard';
@@ -10,11 +10,13 @@ import { IntelligenceBrief, IntelligenceSignal } from './IntelligenceBrief';
 import { ConversionFunnelCard } from './ConversionFunnelCard';
 import { ExecutiveExportModal } from './ExecutiveExportModal';
 import { AlarmRulesModal } from './AlarmRulesModal';
+import { ExecutiveAudioPlayer } from './ExecutiveAudioPlayer';
+import { LiveStreamTicker } from './LiveStreamTicker';
+import { MetricDrilldownModal } from './MetricDrilldownModal';
 import { AnalyticalCoordinate } from '@/components/ui/AnalyticalCoordinate';
-import { TimeGrain } from '@/lib/contracts/analytics';
-import { fetchOverviewDashboardData, OverviewDashboardData } from '@/lib/api/analytics';
+import { TimeGrain, MetricSummaryValue } from '@/lib/contracts/analytics';
+import { fetchOverviewDashboardData, OverviewDashboardData, prewarmOverviewCache } from '@/lib/api/analytics';
 import { formatCurrency, formatDelta, formatExecutionTime, formatPercentage } from '@/lib/utils/formatters';
-import { Bell } from 'lucide-react';
 
 export const OverviewDashboardClient: React.FC = () => {
   const [selectedPreset, setSelectedPreset] = useState<DateRangePreset>('30d');
@@ -24,13 +26,31 @@ export const OverviewDashboardClient: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [isAlarmModalOpen, setIsAlarmModalOpen] = useState(false);
+
+  // Drilldown state
+  const [drilldownMetric, setDrilldownMetric] = useState<{
+    key: string;
+    label: string;
+    data: MetricSummaryValue;
+  } | null>(null);
+
   const activeRange = DATE_PRESETS[selectedPreset];
 
-  const loadDashboardData = useCallback(async () => {
+  // 1. Initial Load & Background Warmup of all presets for 0ms transitions
+  useEffect(() => {
+    prewarmOverviewCache(
+      Object.values(DATE_PRESETS).map((p) => ({
+        startDate: p.startDate,
+        endDate: p.endDate,
+      }))
+    );
+  }, []);
+
+  const loadDashboardData = useCallback(async (force = false) => {
     setIsLoading(true);
     setError(null);
     try {
-      setData(await fetchOverviewDashboardData(activeRange.startDate, activeRange.endDate, timeGrain));
+      setData(await fetchOverviewDashboardData(activeRange.startDate, activeRange.endDate, timeGrain, force));
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Falha ao carregar métricas executivas');
     } finally {
@@ -98,15 +118,18 @@ export const OverviewDashboardClient: React.FC = () => {
     : [];
 
   return (
-    <div className="space-y-8 pb-16">
+    <div className="space-y-6 pb-16">
+      {/* 00 — REAL-TIME TRANSACTION STREAM TICKER */}
+      <LiveStreamTicker />
+
       {/* 01 — EXECUTIVE HERO */}
       <section className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 pb-2">
         <div className="max-w-3xl">
           <div className="flex items-center gap-2">
             <AnalyticalCoordinate dimension="monetary">EXECUTIVE OVERVIEW · LIVE TELEMETRY</AnalyticalCoordinate>
-            <span className="inline-flex items-center gap-1 font-mono text-[9px] px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200/60 text-emerald-700 font-semibold">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 prism-live-dot" />
-              SYNCHRONIZED
+            <span className="inline-flex items-center gap-1 font-mono text-[9px] px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200/60 text-emerald-700 font-bold">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              SYNCHRONIZED (0ms CACHE)
             </span>
           </div>
 
@@ -120,14 +143,14 @@ export const OverviewDashboardClient: React.FC = () => {
 
         {/* Secondary Context & Engine Badges */}
         <div className="flex items-center gap-3 shrink-0 flex-wrap">
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200/80 bg-white shadow-2xs text-xs font-mono">
-            <Database className="h-3.5 w-3.5 text-prism-indigo" />
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-200/80 bg-white shadow-2xs text-xs font-mono">
+            <Database className="h-3.5 w-3.5 text-indigo-600" />
             <span className="text-slate-500">Data Mart:</span>
             <strong className="text-slate-800 font-semibold">100k Rows</strong>
           </div>
           {data && (
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200/80 bg-white shadow-2xs text-xs font-mono">
-              <Zap className="h-3.5 w-3.5 text-amber-500" />
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-200/80 bg-white shadow-2xs text-xs font-mono">
+              <Zap className="h-3.5 w-3.5 text-emerald-600" />
               <span className="text-slate-500">Query:</span>
               <strong className="text-slate-800 font-semibold">{formatExecutionTime(data.executionTimeMs)}</strong>
             </div>
@@ -136,16 +159,16 @@ export const OverviewDashboardClient: React.FC = () => {
       </section>
 
       {/* 02 — SECONDARY CONTEXT & FILTER BAR */}
-      <section className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-3.5 rounded-xl border border-slate-200/80 bg-white shadow-2xs">
+      <section className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-3.5 rounded-2xl border border-slate-200/80 bg-white shadow-2xs">
         <DateRangeSelector
           selectedPreset={selectedPreset}
           onSelectPreset={handlePresetChange}
           disabled={isLoading}
         />
 
-        <div className="flex items-center gap-3 text-xs text-slate-500 flex-wrap">
+        <div className="flex items-center gap-2.5 text-xs text-slate-500 flex-wrap">
           <span className="hidden xl:inline font-medium">
-            Janela de Comparação: <strong className="text-slate-700 font-semibold">{activeRange.comparisonLabel}</strong>
+            Janela: <strong className="text-slate-700 font-semibold">{activeRange.comparisonLabel}</strong>
           </span>
 
           <button
@@ -155,7 +178,7 @@ export const OverviewDashboardClient: React.FC = () => {
             title="Configurar Alarmes e Salvaguardas CloudWatch"
           >
             <Bell className="h-3.5 w-3.5 text-amber-500" />
-            <span>Alarmes (CloudWatch)</span>
+            <span>Alarmes</span>
           </button>
 
           <button
@@ -165,22 +188,25 @@ export const OverviewDashboardClient: React.FC = () => {
             className="prism-secondary-button text-xs"
             title="Gerar Relatório Executivo e Exportação"
           >
-            <Zap className="h-3.5 w-3.5 text-prism-indigo" />
+            <Zap className="h-3.5 w-3.5 text-indigo-600" />
             <span>Relatório Executivo</span>
           </button>
 
           <button
             type="button"
-            onClick={() => void loadDashboardData()}
+            onClick={() => void loadDashboardData(true)}
             disabled={isLoading}
             className="prism-secondary-button text-xs"
-            title="Atualizar dados"
+            title="Forçar atualização dos dados"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`} />
-            <span>Atualizar</span>
+            <span>Recarregar</span>
           </button>
         </div>
       </section>
+
+      {/* 03 — AI EXECUTIVE AUDIO PLAYER WITH EQUALIZER */}
+      <ExecutiveAudioPlayer data={data} periodLabel={activeRange.label} />
 
       {/* ERROR ALERT */}
       {error && (
@@ -194,7 +220,7 @@ export const OverviewDashboardClient: React.FC = () => {
           </span>
           <button
             type="button"
-            onClick={() => void loadDashboardData()}
+            onClick={() => void loadDashboardData(true)}
             className="prism-secondary-button border-rose-200 bg-white hover:bg-rose-50"
           >
             <RefreshCw className="h-3.5 w-3.5" />
@@ -203,7 +229,7 @@ export const OverviewDashboardClient: React.FC = () => {
         </div>
       )}
 
-      {/* 03 — MASTER SOURCE + REFRACTION SURFACE */}
+      {/* 04 — MASTER SOURCE + REFRACTION SURFACE */}
       <SourceRefraction
         grossRevenue={grossRevenue}
         orders={orders}
@@ -215,10 +241,10 @@ export const OverviewDashboardClient: React.FC = () => {
         isLoading={isLoading}
       />
 
-      {/* 04 — EDITORIAL INTELLIGENCE BRIEF */}
+      {/* 05 — EDITORIAL INTELLIGENCE BRIEF */}
       {!isLoading && <IntelligenceBrief signals={signals} />}
 
-      {/* 05 — OPERATIONAL EVIDENCE FIELD */}
+      {/* 06 — OPERATIONAL EVIDENCE FIELD */}
       <section className="space-y-6" aria-labelledby="evidence-heading">
         <div className="flex items-center justify-between">
           <div>
@@ -244,6 +270,7 @@ export const OverviewDashboardClient: React.FC = () => {
               isLoading={isLoading}
             />
           </div>
+
           <div className="prism-panel-master overflow-hidden">
             <CategoryBreakdownCard
               data={data?.categories ?? []}
@@ -272,8 +299,17 @@ export const OverviewDashboardClient: React.FC = () => {
         isOpen={isAlarmModalOpen}
         onClose={() => setIsAlarmModalOpen(false)}
       />
+
+      {/* Metric Root-Cause Drilldown Modal */}
+      {drilldownMetric && (
+        <MetricDrilldownModal
+          isOpen={!!drilldownMetric}
+          onClose={() => setDrilldownMetric(null)}
+          metricKey={drilldownMetric.key}
+          metricLabel={drilldownMetric.label}
+          metricData={drilldownMetric.data}
+        />
+      )}
     </div>
   );
 };
-
-
