@@ -7,6 +7,8 @@ import { RevenueTrendCard } from './RevenueTrendCard';
 import { CategoryBreakdownCard } from './CategoryBreakdownCard';
 import { SourceRefraction } from './SourceRefraction';
 import { IntelligenceBrief, IntelligenceSignal } from './IntelligenceBrief';
+import { ConversionFunnelCard } from './ConversionFunnelCard';
+import { ExecutiveExportModal } from './ExecutiveExportModal';
 import { AnalyticalCoordinate } from '@/components/ui/AnalyticalCoordinate';
 import { TimeGrain } from '@/lib/contracts/analytics';
 import { fetchOverviewDashboardData, OverviewDashboardData } from '@/lib/api/analytics';
@@ -18,6 +20,7 @@ export const OverviewDashboardClient: React.FC = () => {
   const [data, setData] = useState<OverviewDashboardData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const activeRange = DATE_PRESETS[selectedPreset];
 
   const loadDashboardData = useCallback(async () => {
@@ -137,15 +140,27 @@ export const OverviewDashboardClient: React.FC = () => {
           disabled={isLoading}
         />
 
-        <div className="flex items-center gap-3 text-xs text-slate-500">
-          <span className="hidden md:inline font-medium">
+        <div className="flex items-center gap-3 text-xs text-slate-500 flex-wrap">
+          <span className="hidden xl:inline font-medium">
             Janela de Comparação: <strong className="text-slate-700 font-semibold">{activeRange.comparisonLabel}</strong>
           </span>
+
+          <button
+            type="button"
+            onClick={() => setIsExportModalOpen(true)}
+            disabled={isLoading || !data}
+            className="prism-secondary-button text-xs"
+            title="Gerar Relatório Executivo e Exportação"
+          >
+            <Zap className="h-3.5 w-3.5 text-prism-indigo" />
+            <span>Relatório Executivo</span>
+          </button>
+
           <button
             type="button"
             onClick={() => void loadDashboardData()}
             disabled={isLoading}
-            className="prism-secondary-button"
+            className="prism-secondary-button text-xs"
             title="Atualizar dados"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`} />
@@ -191,7 +206,7 @@ export const OverviewDashboardClient: React.FC = () => {
       {!isLoading && <IntelligenceBrief signals={signals} />}
 
       {/* 05 — OPERATIONAL EVIDENCE FIELD */}
-      <section className="space-y-4" aria-labelledby="evidence-heading">
+      <section className="space-y-6" aria-labelledby="evidence-heading">
         <div className="flex items-center justify-between">
           <div>
             <AnalyticalCoordinate dimension="structural">EVD.01 · OPERATIONAL EVIDENCE FIELD</AnalyticalCoordinate>
@@ -223,8 +238,23 @@ export const OverviewDashboardClient: React.FC = () => {
             />
           </div>
         </div>
+
+        {/* 5-Stage Behavioral Conversion Funnel */}
+        <ConversionFunnelCard
+          data={data?.funnel ?? []}
+          isLoading={isLoading}
+        />
       </section>
+
+      {/* Executive Report & Export Modal */}
+      <ExecutiveExportModal
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+        data={data}
+        periodLabel={activeRange.label}
+      />
     </div>
   );
 };
+
 

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import { ArrowRight, RotateCcw, Send } from 'lucide-react';
+import { ArrowRight, RotateCcw, Send, Sparkles, Database, Layers, CheckCircle2, Terminal, ShieldCheck, Zap } from 'lucide-react';
 import { AskPrismResponse, ConversationContext } from '@/lib/contracts/ask';
 import { askPrism } from '@/lib/api/ask_client';
 import { VisualizationRenderer } from '@/components/visualization/VisualizationRenderer';
@@ -17,15 +17,27 @@ interface RefractionTurn {
 }
 
 const suggestions = [
-  'Qual foi o faturamento nos últimos 30 dias?',
-  'Compare a conversão Mobile com Desktop.',
-  'Mostre a receita por categoria.',
+  {
+    tag: 'RECEITA & TICKET',
+    question: 'Qual foi o faturamento nos últimos 30 dias?',
+    desc: 'Receita total, pedidos concluídos e ticket médio com comparação temporal.',
+  },
+  {
+    tag: 'CONVERSÃO & CANAIS',
+    question: 'Compare a conversão Mobile com Desktop.',
+    desc: 'Taxas de finalização de checkout por plataforma e volume de sessões.',
+  },
+  {
+    tag: 'CATEGORIAS & MIX',
+    question: 'Mostre a receita por categoria.',
+    desc: 'Distribuição dimensional por linha de produto e volume de itens.',
+  },
 ];
 
 const NarrativeLine: React.FC<{ text: string }> = ({ text }) => (
-  <p>
+  <p className="leading-relaxed">
     {text.split('**').map((part, index) =>
-      index % 2 === 1 ? <strong key={`${part}-${index}`} className="font-semibold">{part}</strong> : part
+      index % 2 === 1 ? <strong key={`${part}-${index}`} className="font-semibold text-slate-900">{part}</strong> : part
     )}
   </p>
 );
@@ -68,86 +80,287 @@ export const AskPrismClient: React.FC = () => {
     }
   };
 
-  const reset = () => { setTurns([]); setContext(null); setInput(''); inputRef.current?.focus(); };
+  const reset = () => {
+    setTurns([]);
+    setContext(null);
+    setInput('');
+    inputRef.current?.focus();
+  };
+
   const latestAnswer = [...turns].reverse().find((turn) => turn.response)?.response?.answer ?? null;
 
   return (
-    <section className="prism-query-workspace prism-panel p-5 sm:p-8" aria-labelledby="query-workspace-title">
-      <header className="flex flex-col gap-5 border-b border-prism-hairline pb-6 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <AnalyticalCoordinate dimension="monetary">REFRACTION QUERY · LIVE ENGINE</AnalyticalCoordinate>
-          <h2 id="query-workspace-title" className="mt-2.5 text-2xl font-semibold tracking-[-0.03em] text-prism-ink sm:text-[1.625rem]">Da pergunta à evidência</h2>
-          <p className="mt-2.5 max-w-xl text-sm leading-6 text-prism-muted">Cada resposta expõe a interpretação do motor, os resultados calculados e a narrativa retornada.</p>
-        </div>
-        <button type="button" onClick={reset} className="prism-secondary-button self-start text-prism-muted hover:text-prism-ink"><RotateCcw className="h-3.5 w-3.5" />Nova análise</button>
-      </header>
+    <div className="space-y-6">
+      {/* Query Control Master Panel */}
+      <section className="prism-panel-master p-6 sm:p-8" aria-labelledby="query-workspace-title">
+        <header className="flex flex-col gap-4 border-b border-slate-200/80 pb-6 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-indigo-50 border border-indigo-200/60 text-[10px] font-mono font-semibold text-indigo-700 tracking-wider uppercase">
+                <Zap className="w-3 h-3 text-indigo-600" />
+                Refraction Engine v2
+              </span>
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-emerald-50 border border-emerald-200/60 text-[10px] font-mono font-semibold text-emerald-700">
+                <ShieldCheck className="w-3 h-3 text-emerald-600" />
+                AST Validated
+              </span>
+            </div>
+            <h2 id="query-workspace-title" className="mt-2 text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
+              Da pergunta em linguagem natural à evidência computada
+            </h2>
+            <p className="mt-1 text-sm text-slate-500 max-w-2xl leading-relaxed">
+              Interpretação semântica com decomposição de intenção, geração de AST estritamente de leitura e síntese executiva.
+            </p>
+          </div>
+          {turns.length > 0 && (
+            <button
+              type="button"
+              onClick={reset}
+              className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-medium text-slate-600 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg transition-colors shadow-2xs self-start"
+            >
+              <RotateCcw className="h-3.5 w-3.5 text-slate-400" />
+              Nova análise
+            </button>
+          )}
+        </header>
 
-      {turns.length === 0 && (
-        <div className="grid gap-px overflow-hidden rounded-xl border border-prism-hairline bg-prism-hairline mt-6 md:grid-cols-3">
-          {suggestions.map((suggestion, index) => <button key={suggestion} type="button" onClick={() => void submit(suggestion)} className="min-h-28 bg-white p-5 text-left transition-colors duration-150 hover:bg-prism-porcelain"><AnalyticalCoordinate>SRC.Q{index + 1}</AnalyticalCoordinate><span className="mt-3 block text-sm leading-5 text-prism-ink">{suggestion}</span></button>)}
-        </div>
-      )}
+        {/* Suggestion Prompts if No Turns */}
+        {turns.length === 0 && (
+          <div className="mt-8 space-y-4">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-indigo-600" />
+              <span className="text-xs font-mono font-semibold text-slate-700 uppercase tracking-wider">
+                Consultas sugeridas de alto impacto
+              </span>
+            </div>
+            <div className="grid gap-4 md:grid-cols-3">
+              {suggestions.map((item, index) => (
+                <button
+                  key={item.question}
+                  type="button"
+                  onClick={() => void submit(item.question)}
+                  className="group flex flex-col justify-between p-5 text-left rounded-xl bg-slate-50/70 hover:bg-white border border-slate-200/80 hover:border-indigo-300 transition-all duration-200 shadow-2xs hover:shadow-sm"
+                >
+                  <div>
+                    <span className="inline-block px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-white border border-slate-200 text-slate-600 group-hover:text-indigo-600 group-hover:border-indigo-200 transition-colors">
+                      {item.tag}
+                    </span>
+                    <p className="mt-3 text-sm font-semibold text-slate-900 group-hover:text-indigo-950 transition-colors">
+                      &ldquo;{item.question}&rdquo;
+                    </p>
+                    <p className="mt-1.5 text-xs text-slate-500 leading-relaxed">
+                      {item.desc}
+                    </p>
+                  </div>
+                  <div className="mt-4 flex items-center gap-1.5 text-xs font-semibold text-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <span>Executar refração</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
-      <div className="divide-y divide-prism-hairline" aria-live="polite">
-        {turns.map((turn, index) => {
-          const response = turn.response;
-          const summaries = response?.result ? Object.values(response.result.metrics_summary) : [];
-          return (
-            <article key={turn.id} className="py-8 sm:py-10">
-              <div className="grid gap-8 xl:grid-cols-[minmax(15rem,.72fr)_2rem_minmax(0,1.6fr)]">
-                <div>
-                  <AnalyticalCoordinate dimension="monetary">SRC.Q{index + 1} · QUESTION</AnalyticalCoordinate>
-                  <p className="mt-5 text-xl font-semibold leading-8 tracking-[-0.025em] text-prism-ink">{turn.question}</p>
-                  {response && <p className="mt-6 font-mono text-[10px] text-prism-muted">TURN {response.context.turn_count} · {formatExecutionTime(response.execution_time_ms)}</p>}
-                </div>
-                <div className="hidden items-center justify-center xl:flex" aria-hidden="true"><div className="h-full w-px bg-prism-hairline" /><ArrowRight className="absolute h-4 w-4 bg-prism-porcelain text-prism-indigo" /></div>
-                <div className="min-w-0">
-                  {!response && !turn.error && <div className="prism-processing" role="status"><span className="h-2 w-2 bg-prism-indigo" /><span>PRISM está decompondo a pergunta…</span></div>}
-                  {turn.error && <div role="alert" className="rounded-lg border-l-2 border-prism-negative bg-red-50 p-4 text-xs leading-5 text-red-800"><AnalyticalCoordinate>QUERY ERROR</AnalyticalCoordinate><p className="mt-2">{turn.error}</p></div>}
+        {/* Conversation / Turns Stream */}
+        <div className="divide-y divide-slate-200/80" aria-live="polite">
+          {turns.map((turn, index) => {
+            const response = turn.response;
+            const summaries = response?.result ? Object.values(response.result.metrics_summary) : [];
+            return (
+              <article key={turn.id} className="py-8 sm:py-10 space-y-6">
+                {/* Question Section */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl bg-slate-900 text-white shadow-xs">
+                  <div className="flex items-start sm:items-center gap-3">
+                    <div className="p-2 rounded-lg bg-indigo-600/30 border border-indigo-400/30 text-indigo-300">
+                      <Terminal className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">
+                          SRC.Q{index + 1} · CONSULTA
+                        </span>
+                      </div>
+                      <p className="text-base sm:text-lg font-semibold text-white mt-0.5">
+                        {turn.question}
+                      </p>
+                    </div>
+                  </div>
                   {response && (
-                    <div className="space-y-8">
-                      <section aria-labelledby={`${turn.id}-analysis`}>
-                        <AnalyticalCoordinate dimension="behavioral">ANL.{String(index + 1).padStart(2, '0')} · ANALYSIS</AnalyticalCoordinate>
-                        <h3 id={`${turn.id}-analysis`} className="sr-only">Análise da pergunta</h3>
-                        <p className="mt-3 text-sm font-medium text-prism-ink">{response.intent.intent_summary}</p>
-                        <dl className="mt-4 grid gap-px overflow-hidden rounded-lg border border-prism-hairline bg-prism-hairline sm:grid-cols-3">
-                          <div className="bg-white p-3"><dt className="query-term">Métricas</dt><dd className="query-value">{response.intent.metrics.join(', ') || 'Nenhuma'}</dd></div>
-                          <div className="bg-white p-3"><dt className="query-term">Dimensões</dt><dd className="query-value">{response.intent.dimensions.join(', ') || 'Nenhuma'}</dd></div>
-                          <div className="bg-white p-3"><dt className="query-term">Janela</dt><dd className="query-value">{response.intent.start_date} → {response.intent.end_date}</dd></div>
-                        </dl>
-                      </section>
-
-                      <section aria-labelledby={`${turn.id}-evidence`}>
-                        <AnalyticalCoordinate dimension="structural">EVD.{String(index + 1).padStart(2, '0')} · EVIDENCE</AnalyticalCoordinate>
-                        <h3 id={`${turn.id}-evidence`} className="sr-only">Evidências retornadas</h3>
-                        {summaries.length > 0 && <div className="mt-4 grid gap-px overflow-hidden rounded-lg border border-prism-hairline bg-prism-hairline sm:grid-cols-2">{summaries.map((summary) => <div key={summary.metric_id} className="bg-white p-4"><p className="query-term">{summary.metric_id.replaceAll('_', ' ')}</p><p className="mt-2 text-xl font-semibold text-prism-ink tabular-nums">{formatMetricValue(summary.current_value, summary.format_type)}</p></div>)}</div>}
-                        {response.visualization ? <div className="mt-4 rounded-lg border border-prism-hairline p-4"><VisualizationRenderer spec={response.visualization} /></div> : <p className="mt-3 text-xs text-prism-muted">Nenhuma visualização foi necessária para este resultado.</p>}
-                      </section>
-
-                      <section className="border-l-2 border-prism-indigo pl-5" aria-labelledby={`${turn.id}-decision`}>
-                        <AnalyticalCoordinate dimension="monetary">DEC.{String(index + 1).padStart(2, '0')} · DECISION</AnalyticalCoordinate>
-                        <h3 id={`${turn.id}-decision`} className="sr-only">Conclusão retornada pelo PRISM</h3>
-                        <div className="mt-4 space-y-2 text-base font-medium leading-7 text-prism-ink">{response.answer.split('\n').map((line, lineIndex) => <NarrativeLine key={lineIndex} text={line} />)}</div>
-                        <p className="mt-4 font-mono text-[9px] uppercase tracking-[0.12em] text-prism-muted">Narrativa retornada pelo motor PRISM · confiança {(response.confidence * 100).toFixed(0)}%</p>
-                      </section>
+                    <div className="flex items-center gap-3 text-xs font-mono text-slate-400 shrink-0 self-end sm:self-center">
+                      <span className="px-2.5 py-1 rounded bg-slate-800 border border-slate-700 text-slate-300">
+                        TURN {response.context.turn_count}
+                      </span>
+                      <span className="px-2.5 py-1 rounded bg-slate-800 border border-slate-700 text-emerald-400">
+                        {formatExecutionTime(response.execution_time_ms)}
+                      </span>
                     </div>
                   )}
                 </div>
-              </div>
-            </article>
-          );
-        })}
-        <div ref={endRef} />
-      </div>
 
-      <footer className="mt-8 border-t border-prism-hairline pt-6">
-        <form onSubmit={(event) => { event.preventDefault(); void submit(); }} className="flex items-center gap-2">
-          <label htmlFor="prism-question" className="sr-only">Pergunte ao PRISM</label>
-          <input id="prism-question" ref={inputRef} value={input} disabled={isLoading} onChange={(event) => setInput(event.target.value)} placeholder="Faça uma pergunta sobre o negócio…" className="h-12 min-w-0 flex-1 rounded-lg border border-prism-hairline bg-white px-4 text-sm text-prism-ink outline-none placeholder:text-prism-muted focus:border-prism-indigo disabled:opacity-60" />
-          <VoiceInteractionButton onTranscriptComplete={(transcript) => void submit(transcript)} isEngineBusy={isLoading} latestAnswer={latestAnswer} />
-          <button type="submit" disabled={!input.trim() || isLoading} className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-prism-indigo text-white transition-colors duration-150 hover:bg-prism-accent-blueDark disabled:cursor-not-allowed disabled:opacity-40" aria-label="Executar pergunta"><Send className="h-4 w-4" /></button>
-        </form>
-      </footer>
-    </section>
+                {/* Loading state */}
+                {!response && !turn.error && (
+                  <div className="p-8 rounded-xl bg-indigo-50/50 border border-indigo-100 flex items-center justify-center gap-3 text-indigo-900 text-sm font-medium">
+                    <div className="w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+                    <span>PRISM está decompondo a intenção e executando as validações AST no DuckDB…</span>
+                  </div>
+                )}
+
+                {/* Error state */}
+                {turn.error && (
+                  <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-5 text-xs leading-5 text-rose-900">
+                    <div className="flex items-center gap-2 font-mono font-semibold text-rose-700 uppercase tracking-wider">
+                      <span>ERRO DE PROCESSAMENTO</span>
+                    </div>
+                    <p className="mt-2 text-sm">{turn.error}</p>
+                  </div>
+                )}
+
+                {/* Response Breakdown */}
+                {response && (
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    {/* Left: Deconstruction & Evidence (7 cols) */}
+                    <div className="lg:col-span-7 space-y-6">
+                      {/* Step 1: Semantic Intent Deconstruction */}
+                      <div className="p-5 rounded-xl bg-slate-50 border border-slate-200/80 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <AnalyticalCoordinate dimension="behavioral">
+                            ANL.{String(index + 1).padStart(2, '0')} · INTENT DECOMPOSITION
+                          </AnalyticalCoordinate>
+                          <span className="text-[10px] font-mono text-slate-500">AST PARSER</span>
+                        </div>
+                        <p className="text-sm font-medium text-slate-800">
+                          {response.intent.intent_summary}
+                        </p>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 font-mono text-xs">
+                          <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-2xs">
+                            <span className="text-[10px] text-slate-400 block uppercase">Métricas</span>
+                            <span className="font-semibold text-slate-800 truncate block mt-0.5">
+                              {response.intent.metrics.join(', ') || 'Nenhuma'}
+                            </span>
+                          </div>
+                          <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-2xs">
+                            <span className="text-[10px] text-slate-400 block uppercase">Dimensões</span>
+                            <span className="font-semibold text-slate-800 truncate block mt-0.5">
+                              {response.intent.dimensions.join(', ') || 'Nenhuma'}
+                            </span>
+                          </div>
+                          <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-2xs">
+                            <span className="text-[10px] text-slate-400 block uppercase">Janela</span>
+                            <span className="font-semibold text-slate-800 truncate block mt-0.5">
+                              {response.intent.start_date} → {response.intent.end_date}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Step 2: Evidence & Metrics Summary */}
+                      <div className="p-5 rounded-xl bg-white border border-slate-200/80 space-y-4 shadow-2xs">
+                        <div className="flex items-center justify-between">
+                          <AnalyticalCoordinate dimension="structural">
+                            EVD.{String(index + 1).padStart(2, '0')} · EVIDENCE & METRICS
+                          </AnalyticalCoordinate>
+                          <span className="text-[10px] font-mono text-slate-500">VECTORIZED MART</span>
+                        </div>
+
+                        {summaries.length > 0 && (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {summaries.map((summary) => (
+                              <div key={summary.metric_id} className="p-3.5 rounded-lg bg-slate-50 border border-slate-200/80">
+                                <span className="text-[10px] font-mono uppercase tracking-wider text-slate-500 block">
+                                  {summary.metric_id.replaceAll('_', ' ')}
+                                </span>
+                                <span className="mt-1 text-xl font-bold text-slate-900 tabular-nums block font-mono">
+                                  {formatMetricValue(summary.current_value, summary.format_type)}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {response.visualization ? (
+                          <div className="mt-4 pt-4 border-t border-slate-100">
+                            <VisualizationRenderer spec={response.visualization} />
+                          </div>
+                        ) : (
+                          <p className="text-xs text-slate-400 italic">
+                            Nenhuma visualização adicional necessária para esta resposta.
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Right: Decision Synthesis (5 cols) */}
+                    <div className="lg:col-span-5 flex flex-col justify-between p-6 rounded-xl bg-gradient-to-br from-indigo-50/70 via-white to-slate-50 border border-indigo-200/80 shadow-2xs">
+                      <div>
+                        <div className="flex items-center justify-between border-b border-indigo-100 pb-3">
+                          <AnalyticalCoordinate dimension="monetary">
+                            DEC.{String(index + 1).padStart(2, '0')} · SYNTHESIS & ACTIONS
+                          </AnalyticalCoordinate>
+                          <span className="inline-flex items-center gap-1 text-[10px] font-mono font-semibold text-indigo-700 bg-indigo-100/60 px-2 py-0.5 rounded">
+                            <CheckCircle2 className="w-3 h-3 text-indigo-600" />
+                            {(response.confidence * 100).toFixed(0)}% Confiança
+                          </span>
+                        </div>
+
+                        <div className="mt-4 space-y-3 text-sm font-normal text-slate-700">
+                          {response.answer.split('\n').map((line, lineIndex) => (
+                            <NarrativeLine key={lineIndex} text={line} />
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="mt-6 pt-4 border-t border-indigo-100 flex items-center justify-between text-[10px] font-mono text-slate-500">
+                        <span>PRISM NATURAL SYNTHESIS</span>
+                        <span>TURN #{response.context.turn_count}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </article>
+            );
+          })}
+          <div ref={endRef} />
+        </div>
+
+        {/* Input Bar Footer */}
+        <footer className="mt-8 border-t border-slate-200/80 pt-6">
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              void submit();
+            }}
+            className="flex items-center gap-3 bg-slate-50 p-2 rounded-2xl border border-slate-200 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-100 transition-all shadow-inner"
+          >
+            <label htmlFor="prism-question" className="sr-only">Pergunte ao PRISM</label>
+            <input
+              id="prism-question"
+              ref={inputRef}
+              value={input}
+              disabled={isLoading}
+              onChange={(event) => setInput(event.target.value)}
+              placeholder="Faça uma pergunta sobre faturamento, canais, retenção ou categorias…"
+              className="h-11 min-w-0 flex-1 bg-transparent px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none disabled:opacity-60"
+            />
+            <div className="flex items-center gap-2 shrink-0">
+              <VoiceInteractionButton
+                onTranscriptComplete={(transcript) => void submit(transcript)}
+                isEngineBusy={isLoading}
+                latestAnswer={latestAnswer}
+              />
+              <button
+                type="submit"
+                disabled={!input.trim() || isLoading}
+                className="flex h-10 px-4 items-center justify-center gap-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-xs transition-colors duration-150 shadow-sm disabled:cursor-not-allowed disabled:opacity-40"
+                aria-label="Executar pergunta"
+              >
+                <span>Perguntar</span>
+                <Send className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          </form>
+        </footer>
+      </section>
+    </div>
   );
 };

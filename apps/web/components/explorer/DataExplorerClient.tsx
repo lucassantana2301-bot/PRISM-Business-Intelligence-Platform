@@ -116,7 +116,7 @@ export const DataExplorerClient: React.FC = () => {
       });
       setQueryResult(result);
     } catch (err: any) {
-      setError(err.message || 'Query failed');
+      setError(err.message || 'Falha na consulta.');
     } finally {
       setIsLoading(false);
     }
@@ -215,7 +215,7 @@ export const DataExplorerClient: React.FC = () => {
         limit: 5000,
       });
     } catch (err: any) {
-      alert(`Export failed: ${err.message}`);
+      alert(`Exportação falhou: ${err.message}`);
     } finally {
       setIsExporting(false);
     }
@@ -223,43 +223,43 @@ export const DataExplorerClient: React.FC = () => {
 
   // Cell formatter
   const renderCell = (col: ColumnMetadata, val: any) => {
-    if (val === null || val === undefined) return <span className="text-prism-text-muted">—</span>;
+    if (val === null || val === undefined) return <span className="text-slate-300">—</span>;
 
     if (col.format_type === 'currency') {
-      return <span className="text-prism-text-primary font-mono">{formatCurrency(Number(val))}</span>;
+      return <span className="text-slate-900 font-mono font-medium">{formatCurrency(Number(val))}</span>;
     }
     if (col.format_type === 'integer') {
-      return <span className="text-prism-text-secondary font-mono">{formatInteger(Number(val))}</span>;
+      return <span className="text-slate-700 font-mono">{formatInteger(Number(val))}</span>;
     }
     if (col.format_type === 'percentage') {
-      return <span className="text-prism-accent-blue font-mono">{formatPercentage(Number(val) * 100, 1)}</span>;
+      return <span className="text-indigo-600 font-mono font-medium">{formatPercentage(Number(val) * 100, 1)}</span>;
     }
     if (col.format_type === 'boolean') {
       return val ? (
-        <span className="text-emerald-400 font-mono text-[11px]">● Yes</span>
+        <span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded font-mono text-[10px] font-semibold">Sim</span>
       ) : (
-        <span className="text-prism-text-muted font-mono text-[11px]">○ No</span>
+        <span className="text-slate-500 bg-slate-100 px-2 py-0.5 rounded font-mono text-[10px]">Não</span>
       );
     }
     if (col.format_type === 'badge') {
-      let color = 'text-prism-text-secondary';
-      if (val === 'Completed' || val === 'VIP') color = 'text-emerald-400';
-      if (val === 'Processing' || val === 'Regular') color = 'text-blue-400';
-      if (val === 'Cancelled' || val === 'At-Risk') color = 'text-amber-400';
-      if (val === 'Churned') color = 'text-rose-400';
-      return <span className={`font-mono text-xs ${color}`}>● {val}</span>;
+      let color = 'text-slate-700 bg-slate-100 border-slate-200';
+      if (val === 'Completed' || val === 'VIP') color = 'text-emerald-800 bg-emerald-50 border-emerald-200/80';
+      if (val === 'Processing' || val === 'Regular') color = 'text-blue-800 bg-blue-50 border-blue-200/80';
+      if (val === 'Cancelled' || val === 'At-Risk') color = 'text-amber-800 bg-amber-50 border-amber-200/80';
+      if (val === 'Churned') color = 'text-rose-800 bg-rose-50 border-rose-200/80';
+      return <span className={`inline-flex items-center px-2 py-0.5 rounded-md font-mono text-[11px] font-medium border ${color}`}>{val}</span>;
     }
     if (col.format_type === 'datetime') {
-      return <span className="text-prism-text-secondary font-mono text-xs">{String(val)}</span>;
+      return <span className="text-slate-600 font-mono text-xs">{String(val)}</span>;
     }
 
-    return <span className="text-prism-text-primary text-xs truncate max-w-[200px] inline-block">{String(val)}</span>;
+    return <span className="text-slate-800 text-xs truncate max-w-[220px] inline-block">{String(val)}</span>;
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {/* 1. Dataset Selector Tabs */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 border-b border-prism-border-subtle/80">
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 border-b border-slate-200/80">
         {datasets.map((d) => {
           const isSelected = selectedDataset === d.dataset_id;
           return (
@@ -267,15 +267,17 @@ export const DataExplorerClient: React.FC = () => {
               key={d.dataset_id}
               type="button"
               onClick={() => handleDatasetSwitch(d.dataset_id)}
-              className={`px-3.5 py-2 rounded-lg text-xs font-medium flex items-center gap-2 transition-all flex-shrink-0 ${
+              className={`px-4 py-2.5 rounded-xl text-xs font-medium flex items-center gap-2.5 transition-all flex-shrink-0 ${
                 isSelected
-                  ? 'bg-prism-bg-card border border-prism-border-strong text-prism-text-primary shadow-sm'
-                  : 'text-prism-text-secondary hover:text-prism-text-primary hover:bg-prism-bg-card/40 border border-transparent'
+                  ? 'bg-indigo-50/80 border border-indigo-200 text-indigo-950 font-semibold shadow-2xs'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-white border border-transparent'
               }`}
             >
-              <TableIcon className={`w-3.5 h-3.5 ${isSelected ? 'text-prism-accent-blue' : 'text-prism-text-muted'}`} />
+              <TableIcon className={`w-4 h-4 ${isSelected ? 'text-indigo-600' : 'text-slate-400'}`} />
               <span>{d.display_name}</span>
-              <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-prism-bg-elevated text-prism-text-muted">
+              <span className={`px-2 py-0.5 rounded text-[10px] font-mono ${
+                isSelected ? 'bg-indigo-100 text-indigo-800 font-bold' : 'bg-slate-100 text-slate-500'
+              }`}>
                 {formatInteger(d.row_count)}
               </span>
             </button>
@@ -284,16 +286,16 @@ export const DataExplorerClient: React.FC = () => {
       </div>
 
       {/* 2. Exploration Control Toolbar */}
-      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 p-3 rounded-lg bg-prism-bg-card border border-prism-border-subtle">
+      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 p-4 rounded-2xl bg-white border border-slate-200/80 shadow-2xs">
         {/* Search Bar */}
         <div className="relative flex-1 min-w-[240px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-prism-text-muted" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
             type="text"
-            placeholder={`Search ${currentDatasetMeta?.display_name || 'records'}...`}
+            placeholder={`Buscar em ${currentDatasetMeta?.display_name || 'registros'}...`}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-3 py-1.5 text-xs bg-prism-bg-base border border-prism-border-subtle rounded-md text-prism-text-primary placeholder:text-prism-text-muted focus:outline-none focus:border-prism-accent-blue font-mono"
+            className="w-full pl-10 pr-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-indigo-500 focus:bg-white font-mono transition-colors"
           />
         </div>
 
@@ -308,12 +310,12 @@ export const DataExplorerClient: React.FC = () => {
               }
               setShowFilterModal(true);
             }}
-            className="px-2.5 py-1.5 text-xs font-medium rounded-md bg-prism-bg-base border border-prism-border-subtle text-prism-text-secondary hover:text-prism-text-primary hover:border-prism-border-strong flex items-center gap-1.5 transition-colors"
+            className="px-3 py-2 text-xs font-medium rounded-xl bg-white border border-slate-200 text-slate-700 hover:text-slate-900 hover:bg-slate-50 flex items-center gap-1.5 transition-colors shadow-2xs"
           >
-            <Plus className="w-3.5 h-3.5 text-prism-accent-blue" />
-            <span>Filter</span>
+            <Plus className="w-3.5 h-3.5 text-indigo-600" />
+            <span>Filtro</span>
             {filters.length > 0 && (
-              <span className="w-4 h-4 rounded-full bg-prism-accent-blue text-black font-bold text-[10px] flex items-center justify-center">
+              <span className="w-4 h-4 rounded-full bg-indigo-600 text-white font-bold text-[10px] flex items-center justify-center">
                 {filters.length}
               </span>
             )}
@@ -323,19 +325,19 @@ export const DataExplorerClient: React.FC = () => {
           <button
             type="button"
             onClick={() => setShowColumnsModal(!showColumnsModal)}
-            className="px-2.5 py-1.5 text-xs font-medium rounded-md bg-prism-bg-base border border-prism-border-subtle text-prism-text-secondary hover:text-prism-text-primary hover:border-prism-border-strong flex items-center gap-1.5 transition-colors"
+            className="px-3 py-2 text-xs font-medium rounded-xl bg-white border border-slate-200 text-slate-700 hover:text-slate-900 hover:bg-slate-50 flex items-center gap-1.5 transition-colors shadow-2xs"
           >
-            <Eye className="w-3.5 h-3.5" />
-            <span>Columns ({visibleColumns.length})</span>
+            <Eye className="w-3.5 h-3.5 text-slate-500" />
+            <span>Colunas ({visibleColumns.length})</span>
           </button>
 
           {/* Schema Drawer Toggle */}
           <button
             type="button"
             onClick={() => setShowSchemaDrawer(!showSchemaDrawer)}
-            className="px-2.5 py-1.5 text-xs font-medium rounded-md bg-prism-bg-base border border-prism-border-subtle text-prism-text-secondary hover:text-prism-text-primary hover:border-prism-border-strong flex items-center gap-1.5 transition-colors"
+            className="px-3 py-2 text-xs font-medium rounded-xl bg-white border border-slate-200 text-slate-700 hover:text-slate-900 hover:bg-slate-50 flex items-center gap-1.5 transition-colors shadow-2xs"
           >
-            <Info className="w-3.5 h-3.5" />
+            <Info className="w-3.5 h-3.5 text-slate-500" />
             <span>Schema</span>
           </button>
 
@@ -344,10 +346,10 @@ export const DataExplorerClient: React.FC = () => {
             type="button"
             disabled={isExporting || isLoading}
             onClick={handleExport}
-            className="px-3 py-1.5 text-xs font-medium rounded-md bg-prism-bg-elevated hover:bg-prism-border-strong border border-prism-border-subtle text-prism-text-primary flex items-center gap-1.5 transition-colors disabled:opacity-50"
+            className="px-3.5 py-2 text-xs font-medium rounded-xl bg-slate-900 hover:bg-slate-800 text-white flex items-center gap-1.5 transition-colors disabled:opacity-50 shadow-xs"
           >
             <Download className="w-3.5 h-3.5 text-emerald-400" />
-            <span>{isExporting ? 'Exporting...' : 'Export CSV'}</span>
+            <span>{isExporting ? 'Exportando…' : 'Exportar CSV'}</span>
           </button>
         </div>
       </div>
@@ -355,22 +357,22 @@ export const DataExplorerClient: React.FC = () => {
       {/* Active Filter Chips */}
       {filters.length > 0 && (
         <div className="flex items-center gap-2 flex-wrap text-xs">
-          <span className="text-prism-text-muted font-mono text-[11px] flex items-center gap-1">
-            <Filter className="w-3 h-3" /> Active Filters:
+          <span className="text-slate-500 font-mono text-[11px] flex items-center gap-1">
+            <Filter className="w-3 h-3" /> Filtros ativos:
           </span>
           {filters.map((f, idx) => (
             <span
               key={idx}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-prism-bg-card border border-prism-border-subtle text-prism-text-primary font-mono text-[11px]"
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-indigo-50 border border-indigo-200/80 text-indigo-950 font-mono text-[11px]"
             >
-              <span className="text-prism-accent-blue">{f.column}</span>
-              <span className="text-prism-text-muted">{f.operator}</span>
-              <span className="text-prism-text-primary font-semibold">&quot;{String(f.value)}&quot;</span>
+              <span className="font-semibold text-indigo-700">{f.column}</span>
+              <span className="text-indigo-400">{f.operator}</span>
+              <span className="text-indigo-900 font-bold">&quot;{String(f.value)}&quot;</span>
               <button
                 type="button"
                 onClick={() => handleRemoveFilter(idx)}
-                className="hover:text-rose-400 transition-colors ml-1"
-                aria-label={`Remove filter ${f.column}`}
+                className="hover:text-rose-600 transition-colors ml-1 text-indigo-400"
+                aria-label={`Remover filtro ${f.column}`}
               >
                 <X className="w-3 h-3" />
               </button>
@@ -379,36 +381,36 @@ export const DataExplorerClient: React.FC = () => {
           <button
             type="button"
             onClick={() => setFilters([])}
-            className="text-[11px] text-prism-text-muted hover:text-rose-400 underline transition-colors"
+            className="text-[11px] text-slate-500 hover:text-rose-600 underline transition-colors"
           >
-            Clear all
+            Limpar todos
           </button>
         </div>
       )}
 
       {/* Error Alert */}
       {error && (
-        <div className="p-4 rounded-lg bg-rose-950/40 border border-rose-800/60 flex items-center justify-between">
-          <div className="flex items-center gap-2 text-rose-300 text-xs">
-            <AlertCircle className="w-4 h-4 text-rose-400" />
+        <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 flex items-center justify-between">
+          <div className="flex items-center gap-2 text-rose-800 text-xs">
+            <AlertCircle className="w-4 h-4 text-rose-600" />
             <span>{error}</span>
           </div>
           <button
             type="button"
             onClick={executeQuery}
-            className="flex items-center gap-1 px-2.5 py-1 rounded bg-rose-900/60 hover:bg-rose-900 text-xs text-rose-200"
+            className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-white hover:bg-rose-100/50 border border-rose-200 text-xs text-rose-800 font-medium"
           >
-            <RefreshCw className="w-3.5 h-3.5" /> Retry
+            <RefreshCw className="w-3.5 h-3.5" /> Tentar novamente
           </button>
         </div>
       )}
 
-      {/* 3. Main Data Table & Pagination Container */}
-      <div className="rounded-lg bg-prism-bg-card border border-prism-border-subtle overflow-hidden">
-        <div className="overflow-x-auto min-h-[380px]">
+      {/* 3. Main Data Table Container */}
+      <div className="prism-panel-master overflow-hidden">
+        <div className="overflow-x-auto min-h-[400px]">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
-              <tr className="bg-prism-bg-base/80 border-b border-prism-border-subtle">
+              <tr className="bg-slate-50/90 border-b border-slate-200/80">
                 {currentDatasetMeta?.columns
                   .filter((c) => visibleColumns.includes(c.name))
                   .map((col) => {
@@ -418,19 +420,19 @@ export const DataExplorerClient: React.FC = () => {
                         key={col.name}
                         scope="col"
                         onClick={() => col.sortable && handleSort(col.name)}
-                        className={`py-3 px-4 font-mono font-medium text-prism-text-muted uppercase tracking-wider text-[11px] whitespace-nowrap select-none ${
-                          col.sortable ? 'cursor-pointer hover:text-prism-text-primary transition-colors' : ''
+                        className={`py-3.5 px-4 font-mono font-semibold text-slate-600 uppercase tracking-wider text-[10px] whitespace-nowrap select-none ${
+                          col.sortable ? 'cursor-pointer hover:text-indigo-600 transition-colors' : ''
                         }`}
                       >
                         <div className="flex items-center gap-1.5">
                           <span>{col.display_name}</span>
                           {col.sortable && (
-                            <span className="text-prism-text-muted">
+                            <span className="text-slate-400">
                               {isSorted ? (
                                 sortDirection === 'asc' ? (
-                                  <ArrowUp className="w-3.5 h-3.5 text-prism-accent-blue" />
+                                  <ArrowUp className="w-3.5 h-3.5 text-indigo-600" />
                                 ) : (
-                                  <ArrowDown className="w-3.5 h-3.5 text-prism-accent-blue" />
+                                  <ArrowDown className="w-3.5 h-3.5 text-indigo-600" />
                                 )
                               ) : (
                                 <ArrowUpDown className="w-3 h-3 opacity-40" />
@@ -443,16 +445,16 @@ export const DataExplorerClient: React.FC = () => {
                   })}
               </tr>
             </thead>
-            <tbody className="divide-y divide-prism-border-subtle/50 font-sans">
+            <tbody className="divide-y divide-slate-100 font-sans">
               {isLoading ? (
                 <tr>
                   <td
                     colSpan={visibleColumns.length || 1}
-                    className="py-16 text-center text-prism-text-muted font-mono"
+                    className="py-20 text-center text-slate-400 font-mono"
                   >
                     <div className="flex flex-col items-center gap-2">
-                      <RefreshCw className="w-5 h-5 animate-spin text-prism-accent-blue" />
-                      <span>Querying DuckDB server boundary...</span>
+                      <RefreshCw className="w-5 h-5 animate-spin text-indigo-600" />
+                      <span>Consultando vetorização DuckDB...</span>
                     </div>
                   </td>
                 </tr>
@@ -460,11 +462,11 @@ export const DataExplorerClient: React.FC = () => {
                 <tr>
                   <td
                     colSpan={visibleColumns.length || 1}
-                    className="py-16 text-center text-prism-text-muted font-mono"
+                    className="py-20 text-center text-slate-400 font-mono"
                   >
                     <div className="flex flex-col items-center gap-1">
-                      <span>No matching records found for active filters.</span>
-                      <span className="text-[11px]">Try adjusting your search or clearing filter parameters.</span>
+                      <span className="text-slate-700 font-medium">Nenhum registro encontrado com os filtros atuais.</span>
+                      <span className="text-xs">Tente ajustar a busca ou remover critérios de filtro.</span>
                     </div>
                   </td>
                 </tr>
@@ -472,12 +474,12 @@ export const DataExplorerClient: React.FC = () => {
                 queryResult?.rows.map((row, rowIdx) => (
                   <tr
                     key={rowIdx}
-                    className="hover:bg-prism-bg-elevated/40 transition-colors"
+                    className="hover:bg-slate-50/70 transition-colors"
                   >
                     {currentDatasetMeta?.columns
                       .filter((c) => visibleColumns.includes(c.name))
                       .map((col) => (
-                        <td key={col.name} className="py-2.5 px-4 whitespace-nowrap">
+                        <td key={col.name} className="py-3 px-4 whitespace-nowrap">
                           {renderCell(col, row[col.name])}
                         </td>
                       ))}
@@ -489,35 +491,34 @@ export const DataExplorerClient: React.FC = () => {
         </div>
 
         {/* 4. Pagination Footer */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3 bg-prism-bg-base/60 border-t border-prism-border-subtle text-xs font-mono">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 bg-slate-50/60 border-t border-slate-200/80 text-xs font-mono">
           {/* Row count summary */}
-          <div className="text-prism-text-muted">
-            Showing{' '}
-            <strong className="text-prism-text-primary">
+          <div className="text-slate-500">
+            Exibindo{' '}
+            <strong className="text-slate-900 font-bold">
               {queryResult?.total_rows ? (page - 1) * pageSize + 1 : 0}
             </strong>{' '}
-            to{' '}
-            <strong className="text-prism-text-primary">
+            a{' '}
+            <strong className="text-slate-900 font-bold">
               {Math.min(page * pageSize, queryResult?.total_rows || 0)}
             </strong>{' '}
-            of <strong className="text-prism-text-primary">{formatInteger(queryResult?.total_rows || 0)}</strong> records
+            de <strong className="text-slate-900 font-bold">{formatInteger(queryResult?.total_rows || 0)}</strong> registros
             {queryResult && (
-              <span className="ml-2 text-[11px] text-prism-text-muted">({queryResult.execution_time_ms}ms)</span>
+              <span className="ml-2 text-slate-400">({queryResult.execution_time_ms}ms)</span>
             )}
           </div>
 
           {/* Page navigation and page size selector */}
           <div className="flex items-center gap-3">
-            {/* Page Size selector */}
-            <div className="flex items-center gap-1.5 text-prism-text-muted">
-              <span>Rows:</span>
+            <div className="flex items-center gap-1.5 text-slate-500">
+              <span>Linhas:</span>
               <select
                 value={pageSize}
                 onChange={(e) => {
                   setPageSize(parseInt(e.target.value, 10));
                   setPage(1);
                 }}
-                className="bg-prism-bg-card border border-prism-border-subtle rounded px-2 py-1 text-prism-text-primary text-xs focus:outline-none focus:border-prism-accent-blue"
+                className="bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-slate-900 text-xs focus:outline-none focus:border-indigo-500 shadow-2xs"
               >
                 <option value={25}>25</option>
                 <option value={50}>50</option>
@@ -525,28 +526,27 @@ export const DataExplorerClient: React.FC = () => {
               </select>
             </div>
 
-            {/* Pagination Controls */}
             <div className="flex items-center gap-1">
               <button
                 type="button"
                 disabled={page <= 1 || isLoading}
                 onClick={() => setPage((p) => Math.max(p - 1, 1))}
-                className="p-1 rounded bg-prism-bg-card border border-prism-border-subtle text-prism-text-secondary hover:text-prism-text-primary disabled:opacity-40 disabled:cursor-not-allowed"
-                aria-label="Previous page"
+                className="p-1.5 rounded-lg bg-white border border-slate-200 text-slate-600 hover:text-slate-900 disabled:opacity-40 disabled:cursor-not-allowed shadow-2xs"
+                aria-label="Página anterior"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
 
-              <span className="px-2 text-prism-text-primary font-medium">
-                Page {page} / {queryResult?.total_pages || 1}
+              <span className="px-3 text-slate-900 font-semibold">
+                Pág. {page} / {queryResult?.total_pages || 1}
               </span>
 
               <button
                 type="button"
                 disabled={page >= (queryResult?.total_pages || 1) || isLoading}
                 onClick={() => setPage((p) => p + 1)}
-                className="p-1 rounded bg-prism-bg-card border border-prism-border-subtle text-prism-text-secondary hover:text-prism-text-primary disabled:opacity-40 disabled:cursor-not-allowed"
-                aria-label="Next page"
+                className="p-1.5 rounded-lg bg-white border border-slate-200 text-slate-600 hover:text-slate-900 disabled:opacity-40 disabled:cursor-not-allowed shadow-2xs"
+                aria-label="Próxima página"
               >
                 <ChevronRight className="w-4 h-4" />
               </button>
@@ -559,30 +559,29 @@ export const DataExplorerClient: React.FC = () => {
 
       {/* Filter Builder Modal */}
       {showFilterModal && (
-        <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
-          <div className="bg-prism-bg-card border border-prism-border-strong rounded-xl w-full max-w-md p-5 space-y-4 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-prism-border-subtle pb-3">
-              <h4 className="text-sm font-medium text-prism-text-primary flex items-center gap-2">
-                <SlidersHorizontal className="w-4 h-4 text-prism-accent-blue" />
-                Add Filter to {currentDatasetMeta?.display_name}
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-md p-6 space-y-5 shadow-2xl animate-fade-in">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h4 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                <SlidersHorizontal className="w-4 h-4 text-indigo-600" />
+                Adicionar Filtro · {currentDatasetMeta?.display_name}
               </h4>
               <button
                 type="button"
                 onClick={() => setShowFilterModal(false)}
-                className="text-prism-text-muted hover:text-prism-text-primary"
+                className="text-slate-400 hover:text-slate-700"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleAddFilter} className="space-y-3">
-              {/* Column selector */}
+            <form onSubmit={handleAddFilter} className="space-y-4">
               <div>
-                <label className="block text-xs font-mono text-prism-text-muted mb-1">Column</label>
+                <label className="block text-xs font-mono font-medium text-slate-600 mb-1.5">Coluna</label>
                 <select
                   value={newFilterColumn}
                   onChange={(e) => setNewFilterColumn(e.target.value)}
-                  className="w-full bg-prism-bg-base border border-prism-border-subtle rounded-md px-3 py-1.5 text-xs text-prism-text-primary font-mono focus:outline-none focus:border-prism-accent-blue"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-900 font-mono focus:outline-none focus:border-indigo-500 focus:bg-white"
                 >
                   {currentDatasetMeta?.columns
                     .filter((c) => c.filterable)
@@ -594,50 +593,48 @@ export const DataExplorerClient: React.FC = () => {
                 </select>
               </div>
 
-              {/* Operator selector */}
               <div>
-                <label className="block text-xs font-mono text-prism-text-muted mb-1">Operator</label>
+                <label className="block text-xs font-mono font-medium text-slate-600 mb-1.5">Operador</label>
                 <select
                   value={newFilterOperator}
                   onChange={(e) => setNewFilterOperator(e.target.value as ExplorerFilterOperator)}
-                  className="w-full bg-prism-bg-base border border-prism-border-subtle rounded-md px-3 py-1.5 text-xs text-prism-text-primary font-mono focus:outline-none focus:border-prism-accent-blue"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-900 font-mono focus:outline-none focus:border-indigo-500 focus:bg-white"
                 >
-                  <option value="eq">equals (=)</option>
-                  <option value="neq">not equals (!=)</option>
-                  <option value="contains">contains</option>
-                  <option value="gt">greater than (&gt;)</option>
-                  <option value="gte">greater or equal (&gt;=)</option>
-                  <option value="lt">less than (&lt;)</option>
-                  <option value="lte">less or equal (&lt;=)</option>
+                  <option value="eq">igual a (=)</option>
+                  <option value="neq">diferente de (!=)</option>
+                  <option value="contains">contém</option>
+                  <option value="gt">maior que (&gt;)</option>
+                  <option value="gte">maior ou igual (&gt;=)</option>
+                  <option value="lt">menor que (&lt;)</option>
+                  <option value="lte">menor ou igual (&lt;=)</option>
                 </select>
               </div>
 
-              {/* Value input */}
               <div>
-                <label className="block text-xs font-mono text-prism-text-muted mb-1">Filter Value</label>
+                <label className="block text-xs font-mono font-medium text-slate-600 mb-1.5">Valor do Filtro</label>
                 <input
                   type="text"
                   required
-                  placeholder="Enter exact or search value..."
+                  placeholder="Insira o valor exato ou termo..."
                   value={newFilterValue}
                   onChange={(e) => setNewFilterValue(e.target.value)}
-                  className="w-full bg-prism-bg-base border border-prism-border-subtle rounded-md px-3 py-1.5 text-xs text-prism-text-primary font-mono focus:outline-none focus:border-prism-accent-blue"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-900 font-mono focus:outline-none focus:border-indigo-500 focus:bg-white"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-2 border-t border-prism-border-subtle">
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setShowFilterModal(false)}
-                  className="px-3 py-1.5 rounded-md text-xs text-prism-text-muted hover:text-prism-text-primary"
+                  className="px-4 py-2 rounded-xl text-xs font-medium text-slate-600 hover:text-slate-900"
                 >
-                  Cancel
+                  Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 rounded-md text-xs font-medium bg-prism-accent-blue text-black hover:bg-blue-400"
+                  className="px-5 py-2 rounded-xl text-xs font-semibold bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm"
                 >
-                  Apply Filter
+                  Aplicar Filtro
                 </button>
               </div>
             </form>
@@ -647,29 +644,29 @@ export const DataExplorerClient: React.FC = () => {
 
       {/* Column Visibility Selector Modal */}
       {showColumnsModal && (
-        <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
-          <div className="bg-prism-bg-card border border-prism-border-strong rounded-xl w-full max-w-sm p-5 space-y-4 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-prism-border-subtle pb-3">
-              <h4 className="text-sm font-medium text-prism-text-primary flex items-center gap-2">
-                <Eye className="w-4 h-4 text-prism-accent-blue" />
-                Select Visible Columns
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-sm p-6 space-y-4 shadow-2xl animate-fade-in">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h4 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                <Eye className="w-4 h-4 text-indigo-600" />
+                Colunas Visíveis
               </h4>
               <button
                 type="button"
                 onClick={() => setShowColumnsModal(false)}
-                className="text-prism-text-muted hover:text-prism-text-primary"
+                className="text-slate-400 hover:text-slate-700"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+            <div className="space-y-1.5 max-h-72 overflow-y-auto pr-1">
               {currentDatasetMeta?.columns.map((c) => {
                 const isChecked = visibleColumns.includes(c.name);
                 return (
                   <label
                     key={c.name}
-                    className="flex items-center gap-2.5 p-1.5 rounded hover:bg-prism-bg-base text-xs font-mono cursor-pointer"
+                    className="flex items-center gap-3 p-2 rounded-xl hover:bg-slate-50 text-xs font-mono cursor-pointer transition-colors"
                   >
                     <input
                       type="checkbox"
@@ -683,31 +680,31 @@ export const DataExplorerClient: React.FC = () => {
                           }
                         }
                       }}
-                      className="rounded border-prism-border-subtle bg-prism-bg-base text-prism-accent-blue"
+                      className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
                     />
-                    <span className="text-prism-text-primary font-sans">{c.display_name}</span>
-                    <span className="text-prism-text-muted text-[10px]">({c.name})</span>
+                    <span className="text-slate-900 font-sans font-medium">{c.display_name}</span>
+                    <span className="text-slate-400 text-[10px]">({c.name})</span>
                   </label>
                 );
               })}
             </div>
 
-            <div className="flex items-center justify-between pt-2 border-t border-prism-border-subtle text-xs">
+            <div className="flex items-center justify-between pt-3 border-t border-slate-100 text-xs">
               <button
                 type="button"
                 onClick={() => {
                   if (currentDatasetMeta) setVisibleColumns(currentDatasetMeta.default_columns);
                 }}
-                className="text-prism-text-muted hover:text-prism-accent-blue underline"
+                className="text-slate-500 hover:text-indigo-600 underline font-medium"
               >
-                Reset Default
+                Restaurar Padrão
               </button>
               <button
                 type="button"
                 onClick={() => setShowColumnsModal(false)}
-                className="px-3 py-1 rounded bg-prism-bg-elevated hover:bg-prism-border-strong text-prism-text-primary"
+                className="px-4 py-1.5 rounded-xl bg-slate-900 text-white font-medium hover:bg-slate-800"
               >
-                Done
+                Concluir
               </button>
             </div>
           </div>
@@ -716,61 +713,61 @@ export const DataExplorerClient: React.FC = () => {
 
       {/* Schema Information Drawer */}
       {showSchemaDrawer && (
-        <div className="fixed inset-0 z-50 bg-black/70 flex justify-end">
-          <div className="bg-prism-bg-card border-l border-prism-border-strong w-full max-w-lg p-6 space-y-5 overflow-y-auto shadow-2xl animate-in slide-in-from-right duration-200">
-            <div className="flex items-center justify-between border-b border-prism-border-subtle pb-4">
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex justify-end">
+          <div className="bg-white border-l border-slate-200 w-full max-w-lg p-6 space-y-6 overflow-y-auto shadow-2xl animate-in slide-in-from-right duration-200">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
               <div>
-                <h3 className="text-base font-medium text-prism-text-primary flex items-center gap-2">
-                  <TableIcon className="w-4 h-4 text-prism-accent-blue" />
-                  {currentDatasetMeta?.display_name} Schema
+                <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                  <TableIcon className="w-4 h-4 text-indigo-600" />
+                  Schema: {currentDatasetMeta?.display_name}
                 </h3>
-                <p className="text-xs text-prism-text-muted mt-0.5">{currentDatasetMeta?.description}</p>
+                <p className="text-xs text-slate-500 mt-1 leading-relaxed">{currentDatasetMeta?.description}</p>
               </div>
               <button
                 type="button"
                 onClick={() => setShowSchemaDrawer(false)}
-                className="text-prism-text-muted hover:text-prism-text-primary"
+                className="text-slate-400 hover:text-slate-700"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-3 text-xs font-mono p-3 bg-prism-bg-base rounded-lg border border-prism-border-subtle">
+            <div className="space-y-5">
+              <div className="grid grid-cols-2 gap-3 text-xs font-mono p-3.5 bg-slate-50 rounded-xl border border-slate-200/80">
                 <div>
-                  <span className="text-prism-text-muted">Table Name:</span>{' '}
-                  <span className="text-prism-text-primary">{currentDatasetMeta?.table_name}</span>
+                  <span className="text-slate-400 block text-[10px]">Tabela DuckDB:</span>
+                  <span className="text-slate-900 font-semibold">{currentDatasetMeta?.table_name}</span>
                 </div>
                 <div>
-                  <span className="text-prism-text-muted">Primary Key:</span>{' '}
-                  <span className="text-prism-accent-blue">{currentDatasetMeta?.primary_key}</span>
+                  <span className="text-slate-400 block text-[10px]">Chave Primária:</span>
+                  <span className="text-indigo-600 font-semibold">{currentDatasetMeta?.primary_key}</span>
                 </div>
               </div>
 
               <div className="space-y-3">
-                <h4 className="text-xs font-mono uppercase tracking-wider text-prism-text-muted">
-                  Column Metadata ({currentDatasetMeta?.columns.length})
+                <h4 className="text-xs font-mono uppercase tracking-wider text-slate-500 font-semibold">
+                  Metadados de Colunas ({currentDatasetMeta?.columns.length})
                 </h4>
-                <div className="divide-y divide-prism-border-subtle/60 border border-prism-border-subtle rounded-lg bg-prism-bg-base/40">
+                <div className="divide-y divide-slate-100 border border-slate-200 rounded-xl bg-white overflow-hidden shadow-2xs">
                   {currentDatasetMeta?.columns.map((c) => (
-                    <div key={c.name} className="p-3 space-y-1">
+                    <div key={c.name} className="p-3.5 space-y-1">
                       <div className="flex items-center justify-between text-xs font-mono">
-                        <span className="text-prism-text-primary font-semibold">{c.name}</span>
-                        <span className="px-1.5 py-0.5 rounded bg-prism-bg-elevated text-prism-accent-blue text-[10px]">
+                        <span className="text-slate-900 font-semibold">{c.name}</span>
+                        <span className="px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 text-[10px] font-bold border border-indigo-100">
                           {c.data_type}
                         </span>
                       </div>
-                      <p className="text-xs text-prism-text-secondary">{c.description}</p>
-                      <div className="flex items-center gap-2 text-[10px] font-mono text-prism-text-muted pt-1">
-                        <span>{c.nullable ? 'Nullable' : 'Non-Null'}</span>
+                      <p className="text-xs text-slate-600">{c.description}</p>
+                      <div className="flex items-center gap-2 text-[10px] font-mono text-slate-400 pt-1">
+                        <span>{c.nullable ? 'Anulável' : 'Não nulo'}</span>
                         <span>•</span>
-                        <span>{c.filterable ? 'Filterable' : 'Non-filterable'}</span>
+                        <span>{c.filterable ? 'Filtrável' : 'Não filtrável'}</span>
                         <span>•</span>
-                        <span>{c.sortable ? 'Sortable' : 'Non-sortable'}</span>
+                        <span>{c.sortable ? 'Ordenável' : 'Não ordenável'}</span>
                         {c.searchable && (
                           <>
                             <span>•</span>
-                            <span className="text-emerald-400">Searchable</span>
+                            <span className="text-emerald-600 font-semibold">Buscável</span>
                           </>
                         )}
                       </div>

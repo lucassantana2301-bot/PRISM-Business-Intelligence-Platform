@@ -9,12 +9,15 @@ import {
   TrendingDown,
   Sparkles,
   ArrowRight,
-  Bot,
+  ShieldCheck,
   Activity,
   Layers,
+  Bot,
 } from 'lucide-react';
 import { BusinessInsight, InsightSeverity } from '@/lib/contracts/insights';
+import { AnalyticalCoordinate } from '@/components/ui/AnalyticalCoordinate';
 import { formatDelta } from '@/lib/utils/formatters';
+import clsx from 'clsx';
 
 export interface InsightsFeedProps {
   insights: BusinessInsight[];
@@ -37,60 +40,61 @@ export const InsightsFeed: React.FC<InsightsFeedProps> = ({
       case 'critical':
         return {
           icon: AlertCircle,
-          label: 'Critical Anomaly',
-          className: 'bg-rose-950/60 text-rose-400 border-rose-800/50',
-          accent: 'border-l-rose-500',
+          label: 'Anomalia Crítica',
+          badgeClass: 'bg-rose-50 text-rose-700 border-rose-200',
+          accentClass: 'border-l-rose-500',
         };
       case 'warning':
         return {
           icon: TrendingDown,
-          label: 'Performance Lag',
-          className: 'bg-amber-950/60 text-amber-400 border-amber-800/50',
-          accent: 'border-l-amber-500',
+          label: 'Desaceleração',
+          badgeClass: 'bg-amber-50 text-amber-700 border-amber-200',
+          accentClass: 'border-l-amber-500',
         };
       case 'opportunity':
         return {
           icon: TrendingUp,
-          label: 'Growth Surge',
-          className: 'bg-emerald-950/60 text-emerald-400 border-emerald-800/50',
-          accent: 'border-l-emerald-500',
+          label: 'Oportunidade de Crescimento',
+          badgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+          accentClass: 'border-l-emerald-500',
         };
       default:
         return {
           icon: Sparkles,
-          label: 'Statistical Signal',
-          className: 'bg-blue-950/60 text-blue-400 border-blue-800/50',
-          accent: 'border-l-blue-500',
+          label: 'Sinal Estatístico',
+          badgeClass: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+          accentClass: 'border-l-indigo-500',
         };
     }
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-8">
       {/* 1. Header Filter & Summary Strip */}
-      <div className="p-4 rounded-xl bg-prism-bg-card border border-prism-border-subtle shadow-prism-card flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-xs font-mono text-prism-text-muted flex items-center gap-1.5">
-            <Filter className="w-3.5 h-3.5 text-prism-accent-blue" aria-hidden="true" />
-            Severity:
+      <section className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-3.5 rounded-xl border border-slate-200/80 bg-white shadow-2xs">
+        <div className="flex items-center gap-3 flex-wrap">
+          <span className="font-mono text-xs text-slate-400 flex items-center gap-1.5 uppercase tracking-wider">
+            <Filter className="h-3.5 w-3.5 text-prism-indigo" />
+            Severidade:
           </span>
 
-          <div className="flex items-center gap-1 bg-prism-bg-base p-1 rounded-lg border border-prism-border-subtle">
+          <div role="group" className="inline-flex p-0.5 rounded-lg border border-slate-200/80 bg-slate-50/80">
             {[
-              { id: 'all', label: `All (${insights.length})` },
-              { id: 'critical', label: `Critical (${insights.filter((i) => i.severity === 'critical').length})` },
-              { id: 'warning', label: `Warnings (${insights.filter((i) => i.severity === 'warning').length})` },
-              { id: 'opportunity', label: `Opportunities (${insights.filter((i) => i.severity === 'opportunity').length})` },
+              { id: 'all', label: `Todos (${insights.length})` },
+              { id: 'critical', label: `Críticos (${insights.filter((i) => i.severity === 'critical').length})` },
+              { id: 'warning', label: `Avisos (${insights.filter((i) => i.severity === 'warning').length})` },
+              { id: 'opportunity', label: `Oportunidades (${insights.filter((i) => i.severity === 'opportunity').length})` },
             ].map((tab) => (
               <button
                 key={tab.id}
                 type="button"
                 onClick={() => setFilterSeverity(tab.id)}
-                className={`px-3 py-1 rounded-md text-xs font-mono transition-all ${
+                className={clsx(
+                  'px-3 py-1.5 text-xs font-semibold rounded-md transition-all duration-150',
                   filterSeverity === tab.id
-                    ? 'bg-prism-bg-elevated text-prism-text-primary font-semibold border border-prism-border-hover shadow-sm'
-                    : 'text-prism-text-secondary hover:text-prism-text-primary hover:bg-prism-bg-elevated/50'
-                }`}
+                    ? 'bg-slate-900 text-white shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                )}
               >
                 {tab.label}
               </button>
@@ -98,87 +102,108 @@ export const InsightsFeed: React.FC<InsightsFeedProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center gap-2 text-xs font-mono text-prism-text-muted">
-          <Activity className="w-3.5 h-3.5 text-emerald-400" />
-          <span>Window: {evaluatedPeriod}</span>
+        <div className="flex items-center gap-2 font-mono text-xs text-slate-500">
+          <Activity className="h-3.5 w-3.5 text-prism-indigo" />
+          <span>Janela: <strong>{evaluatedPeriod}</strong></span>
         </div>
-      </div>
+      </section>
 
       {/* 2. Insights Cards Feed */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {filtered.map((insight) => {
-          const badge = getSeverityBadge(insight.severity);
-          const Icon = badge.icon;
+      <div className="grid grid-cols-1 gap-6">
+        {filtered.map((insight, idx) => {
+          const config = getSeverityBadge(insight.severity);
+          const Icon = config.icon;
 
           return (
-            <div
-              key={insight.id}
-              className={`p-5 rounded-xl bg-prism-bg-card border border-prism-border-subtle hover:border-prism-border-hover shadow-prism-card hover:shadow-prism-elevated border-l-4 ${badge.accent} transition-all duration-200 space-y-3.5 flex flex-col justify-between`}
+            <article
+              key={insight.id || idx}
+              className={clsx(
+                'prism-panel-master p-6 sm:p-8 border-l-4 transition-all duration-150 hover:shadow-lg',
+                config.accentClass
+              )}
             >
-              <div className="space-y-3">
-                {/* Top Badge & Metric Meta */}
-                <div className="flex items-center justify-between">
-                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded text-[11px] font-mono border font-medium ${badge.className}`}>
-                    <Icon className="w-3 h-3" />
-                    <span>{badge.label}</span>
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-4 border-b border-slate-100">
+                <div className="flex items-center gap-2.5 flex-wrap">
+                  <span
+                    className={clsx(
+                      'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold border',
+                      config.badgeClass
+                    )}
+                  >
+                    <Icon className="h-3.5 w-3.5" />
+                    {config.label}
                   </span>
 
-                  <div className="flex items-center gap-1.5 font-mono text-xs">
-                    <span className="text-prism-text-muted">Delta:</span>
-                    <span
-                      className={`px-2 py-0.5 rounded text-[11px] font-semibold ${
-                        insight.change > 0 ? 'text-emerald-400 bg-emerald-950/60' : 'text-rose-400 bg-rose-950/60'
-                      }`}
-                    >
-                      {formatDelta(insight.change)}
+                  <AnalyticalCoordinate dimension={insight.severity === 'critical' ? 'monetary' : 'behavioral'}>
+                    {`SIG.0${idx + 1}`}
+                  </AnalyticalCoordinate>
+
+                  {insight.dimension && (
+                    <span className="font-mono text-xs text-slate-500 px-2 py-0.5 rounded bg-slate-100 border border-slate-200/60">
+                      {insight.dimension}: {insight.segment || 'Geral'}
                     </span>
-                  </div>
+                  )}
                 </div>
 
-                {/* Title */}
-                <h4 className="text-sm font-semibold text-prism-text-primary tracking-tight">
-                  {insight.title}
-                </h4>
-
-                {/* Observation Evidence (Fact) */}
-                <div className="p-3 rounded-lg bg-prism-bg-base/80 border border-prism-border-subtle/70 text-xs space-y-1.5">
-                  <div className="text-[10px] font-mono uppercase text-prism-text-muted tracking-wider flex items-center gap-1.5">
-                    <Layers className="w-3 h-3 text-prism-accent-blue" />
-                    <span>Empirical Observation</span>
-                  </div>
-                  <p className="text-prism-text-secondary leading-relaxed font-sans text-xs">
-                    {insight.evidence}
-                  </p>
+                <div className="flex items-center gap-2 font-mono text-xs text-slate-400">
+                  <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
+                  <span>Confiança: <strong>{((insight.confidence || 0.95) * 100).toFixed(0)}%</strong></span>
                 </div>
-
-                {/* Hypothesis (Clearly Separated) */}
-                {insight.hypothesis && (
-                  <div className="text-[11px] text-prism-text-muted leading-relaxed font-sans italic bg-prism-bg-canvas/40 p-2.5 rounded-lg border border-prism-border-subtle/40">
-                    <strong className="text-prism-text-secondary font-mono not-italic font-normal">Hypothesis: </strong>
-                    {insight.hypothesis}
-                  </div>
-                )}
               </div>
 
-              {/* Action Footer: Investigate with PRISM */}
-              <div className="pt-3.5 border-t border-prism-border-subtle/60 flex items-center justify-between gap-2">
-                <div className="text-[10px] font-mono text-prism-text-muted truncate max-w-[200px]">
-                  Conf: {(insight.confidence * 100).toFixed(0)}% • {insight.dimension}: {insight.segment}
+              <div className="mt-5 space-y-3">
+                <h3 className="text-xl font-bold tracking-tight text-slate-900 leading-snug">
+                  {insight.title}
+                </h3>
+              </div>
+
+              {/* Factual Observation Card */}
+              <div className="mt-5 p-4 rounded-xl border border-slate-100 bg-[#fbfcfd] space-y-2">
+                <div className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-wider text-slate-400 font-bold">
+                  <Layers className="h-3.5 w-3.5 text-prism-indigo" />
+                  <span>Evidência Observada (Fato Determinístico)</span>
+                </div>
+                <p className="text-sm text-slate-700 leading-relaxed font-sans">
+                  {insight.evidence}
+                </p>
+              </div>
+
+              {/* Hypothesis */}
+              {insight.hypothesis && (
+                <div className="mt-3 p-3.5 rounded-xl border border-indigo-100/60 bg-indigo-50/30 text-xs text-slate-600 leading-relaxed">
+                  <strong className="text-indigo-900 font-semibold font-mono">Hipótese Causal: </strong>
+                  {insight.hypothesis}
+                </div>
+              )}
+
+              {/* Quantitative Footer */}
+              <div className="mt-6 pt-4 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3 font-mono text-xs tabular-nums">
+                  <span className="text-slate-400">Variação:</span>
+                  <span
+                    className={clsx(
+                      'font-bold px-2 py-0.5 rounded',
+                      insight.change > 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'
+                    )}
+                  >
+                    {formatDelta(insight.change)}
+                  </span>
                 </div>
 
                 <Link
-                  href={`/ask`}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-prism-accent-blue/10 hover:bg-prism-accent-blue/20 text-prism-accent-blue hover:text-blue-300 border border-prism-accent-blue/30 text-xs font-mono transition-all shadow-sm"
+                  href={`/ask?query=${encodeURIComponent(insight.ask_query || insight.title)}`}
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-prism-indigo hover:text-prism-indigoDark transition-colors group"
                 >
-                  <Bot className="w-3.5 h-3.5" />
-                  <span>Investigate with PRISM</span>
-                  <ArrowRight className="w-3 h-3" />
+                  <Bot className="h-3.5 w-3.5" />
+                  <span>Interrogar evidências com ASK PRISM</span>
+                  <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
                 </Link>
               </div>
-            </div>
+            </article>
           );
         })}
       </div>
     </div>
   );
 };
+

@@ -11,6 +11,7 @@ import {
   Table as TableIcon,
   Clock,
   Lock,
+  Zap,
 } from 'lucide-react';
 import { DataSourcesResponse } from '@/lib/contracts/data_sources';
 
@@ -35,77 +36,86 @@ export const DataSourcesView: React.FC<DataSourcesViewProps> = ({ initialData })
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      {/* 1. Active Data Engine Card */}
-      <div className="p-5 rounded-xl bg-prism-bg-card border border-prism-border-subtle shadow-prism-card space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-prism-border-subtle/60">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-prism-accent-blue/10 border border-prism-accent-blue/30 text-prism-accent-blue shadow-sm">
-              <Database className="w-5 h-5" />
+    <div className="space-y-8 animate-fade-in">
+      {/* 1. Active Data Engine Master Panel */}
+      <div className="prism-panel-master p-6 sm:p-8 space-y-6">
+        <div className="flex flex-wrap items-center justify-between gap-4 pb-6 border-b border-slate-200/80">
+          <div className="flex items-center gap-4">
+            <div className="p-3 rounded-2xl bg-indigo-50 border border-indigo-200 text-indigo-600 shadow-2xs">
+              <Database className="w-6 h-6" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-sm font-semibold text-prism-text-primary tracking-tight">
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <h3 className="text-lg font-bold text-slate-900 tracking-tight">
                   {active_source.name}
                 </h3>
-                <span className="px-2.5 py-0.5 rounded-lg text-[11px] font-mono bg-emerald-950/60 text-emerald-400 border border-emerald-800/40 font-medium flex items-center gap-1 shadow-sm">
-                  <CheckCircle2 className="w-3 h-3" />
-                  Active OLAP Engine
+                <span className="px-2.5 py-0.5 rounded-md text-[11px] font-mono bg-emerald-50 text-emerald-700 border border-emerald-200 font-semibold flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                  Motor OLAP Ativo
                 </span>
               </div>
-              <p className="text-xs text-prism-text-muted mt-0.5 font-mono">
+              <p className="text-xs text-slate-500 mt-1 font-mono">
                 {active_source.endpoint_redacted}
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-3 text-xs font-mono">
-            <div className="flex items-center gap-1.5 text-prism-text-muted px-2.5 py-1 rounded-lg bg-prism-bg-base border border-prism-border-subtle">
-              <Clock className="w-3.5 h-3.5 text-prism-accent-blue" />
-              <span>{active_source.latency_ms}ms latency</span>
+            <div className="flex items-center gap-1.5 text-slate-700 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 shadow-2xs">
+              <Clock className="w-3.5 h-3.5 text-indigo-600" />
+              <span>{active_source.latency_ms}ms latência</span>
             </div>
-            <div className="flex items-center gap-1.5 text-prism-text-muted px-2.5 py-1 rounded-lg bg-prism-bg-base border border-prism-border-subtle">
-              <TableIcon className="w-3.5 h-3.5 text-prism-accent-purple" />
-              <span>{active_source.available_tables.length} tables cataloged</span>
+            <div className="flex items-center gap-1.5 text-slate-700 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 shadow-2xs">
+              <TableIcon className="w-3.5 h-3.5 text-indigo-600" />
+              <span>{active_source.available_tables.length} tabelas catalogadas</span>
             </div>
           </div>
         </div>
 
-        {/* Governance Badges */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
-          <div className="p-3.5 rounded-xl bg-prism-bg-base/80 border border-prism-border-subtle flex items-center gap-3">
-            <ShieldCheck className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-            <div className="text-xs font-mono">
-              <div className="text-prism-text-primary font-medium">AST Read-Only</div>
-              <div className="text-[10px] text-prism-text-muted">Zero DDL/DML permissions</div>
+        {/* Governance & Sandbox Badges */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
+          <div className="p-4 rounded-xl bg-slate-50/70 border border-slate-200/80 flex items-center gap-3.5">
+            <div className="p-2 rounded-lg bg-emerald-100 text-emerald-700">
+              <ShieldCheck className="w-4 h-4" />
+            </div>
+            <div className="text-xs">
+              <div className="text-slate-900 font-bold font-mono">AST Read-Only</div>
+              <div className="text-[11px] text-slate-500 mt-0.5">Zero permissões DDL/DML</div>
             </div>
           </div>
 
-          <div className="p-3.5 rounded-xl bg-prism-bg-base/80 border border-prism-border-subtle flex items-center gap-3">
-            <Lock className="w-4 h-4 text-prism-accent-blue flex-shrink-0" />
-            <div className="text-xs font-mono">
-              <div className="text-prism-text-primary font-medium">Max 1,000 Rows/Query</div>
-              <div className="text-[10px] text-prism-text-muted">Strict memory protection</div>
+          <div className="p-4 rounded-xl bg-slate-50/70 border border-slate-200/80 flex items-center gap-3.5">
+            <div className="p-2 rounded-lg bg-indigo-100 text-indigo-700">
+              <Lock className="w-4 h-4" />
+            </div>
+            <div className="text-xs">
+              <div className="text-slate-900 font-bold font-mono">Max 1.000 Linhas/Query</div>
+              <div className="text-[11px] text-slate-500 mt-0.5">Proteção de memória estrita</div>
             </div>
           </div>
 
-          <div className="p-3.5 rounded-xl bg-prism-bg-base/80 border border-prism-border-subtle flex items-center gap-3">
-            <Clock className="w-4 h-4 text-prism-accent-purple flex-shrink-0" />
-            <div className="text-xs font-mono">
-              <div className="text-prism-text-primary font-medium">{active_source.governance.query_timeout_ms}ms Timeout</div>
-              <div className="text-[10px] text-prism-text-muted">Auto-kill runaway queries</div>
+          <div className="p-4 rounded-xl bg-slate-50/70 border border-slate-200/80 flex items-center gap-3.5">
+            <div className="p-2 rounded-lg bg-purple-100 text-purple-700">
+              <Clock className="w-4 h-4" />
+            </div>
+            <div className="text-xs">
+              <div className="text-slate-900 font-bold font-mono">{active_source.governance.query_timeout_ms}ms Timeout</div>
+              <div className="text-[11px] text-slate-500 mt-0.5">Cancelamento automático de runaway</div>
             </div>
           </div>
         </div>
       </div>
 
       {/* 2. Provider Ecosystem Grid */}
-      <div className="space-y-3">
-        <h4 className="text-xs font-mono uppercase tracking-wider text-prism-text-muted font-medium">
-          Supported Analytical Engines & Warehouses
-        </h4>
+      <div className="space-y-4">
+        <div className="flex items-center gap-2">
+          <Zap className="w-4 h-4 text-indigo-600" />
+          <h4 className="text-xs font-mono uppercase tracking-wider text-slate-700 font-bold">
+            Ecossistema de Motores & Data Warehouses
+          </h4>
+        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {sources.map((src) => {
             const Icon = getSourceIcon(src.type);
             const isConnected = src.status === 'connected';
@@ -113,36 +123,36 @@ export const DataSourcesView: React.FC<DataSourcesViewProps> = ({ initialData })
             return (
               <div
                 key={src.id}
-                className={`p-5 rounded-xl bg-prism-bg-card border transition-all duration-200 flex flex-col justify-between space-y-3.5 shadow-prism-card hover:shadow-prism-elevated ${
+                className={`p-6 rounded-2xl bg-white border transition-all duration-200 flex flex-col justify-between space-y-4 shadow-2xs hover:shadow-md ${
                   src.is_default
-                    ? 'border-prism-accent-blue/50 ring-1 ring-prism-accent-blue/20'
-                    : 'border-prism-border-subtle hover:border-prism-border-hover'
+                    ? 'border-indigo-300 ring-2 ring-indigo-50'
+                    : 'border-slate-200/80 hover:border-slate-300'
                 }`}
               >
-                <div className="space-y-2.5">
+                <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <div className="p-2 rounded-lg bg-prism-bg-base border border-prism-border-subtle text-prism-accent-blue">
-                      <Icon className="w-4 h-4" />
+                    <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-indigo-600">
+                      <Icon className="w-5 h-5" />
                     </div>
 
                     <span
-                      className={`px-2.5 py-0.5 rounded-lg text-[10px] font-mono border font-medium ${
+                      className={`px-2.5 py-0.5 rounded-md text-[10px] font-mono border font-semibold ${
                         isConnected
-                          ? 'bg-emerald-950/60 text-emerald-400 border-emerald-800/40'
-                          : 'bg-zinc-800 text-zinc-400 border-zinc-700'
+                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                          : 'bg-slate-100 text-slate-600 border-slate-200'
                       }`}
                     >
-                      {isConnected ? (src.is_default ? 'Active Demo' : 'Connected') : 'Available via Env'}
+                      {isConnected ? (src.is_default ? 'Ativo (Padrão)' : 'Conectado') : 'Configurável via Env'}
                     </span>
                   </div>
 
-                  <h5 className="text-sm font-semibold text-prism-text-primary tracking-tight">{src.name}</h5>
-                  <p className="text-xs text-prism-text-secondary leading-relaxed">
+                  <h5 className="text-base font-bold text-slate-900 tracking-tight">{src.name}</h5>
+                  <p className="text-xs text-slate-500 leading-relaxed">
                     {src.description}
                   </p>
                 </div>
 
-                <div className="pt-2.5 border-t border-prism-border-subtle/50 text-[11px] font-mono text-prism-text-muted truncate">
+                <div className="pt-3 border-t border-slate-100 text-[11px] font-mono text-slate-400 truncate">
                   {src.endpoint_redacted}
                 </div>
               </div>
@@ -152,33 +162,36 @@ export const DataSourcesView: React.FC<DataSourcesViewProps> = ({ initialData })
       </div>
 
       {/* 3. Cataloged Tables & Schema Specifications */}
-      <div className="space-y-3">
+      <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-mono uppercase tracking-wider text-prism-text-muted font-medium">
-            Allowlisted Dataset Catalog ({active_source.available_tables.length} Tables)
-          </h4>
-          <span className="text-xs font-mono text-prism-text-muted">
-            Total Rows: {initialData.total_rows.toLocaleString()}
+          <div className="flex items-center gap-2">
+            <TableIcon className="w-4 h-4 text-indigo-600" />
+            <h4 className="text-xs font-mono uppercase tracking-wider text-slate-700 font-bold">
+              Catálogo de Conjuntos de Dados Canônicos ({active_source.available_tables.length} Tabelas)
+            </h4>
+          </div>
+          <span className="text-xs font-mono text-slate-500">
+            Total de Registros: <strong className="text-slate-900">{initialData.total_rows.toLocaleString()}</strong>
           </span>
         </div>
 
-        <div className="rounded-xl border border-prism-border-subtle overflow-hidden bg-prism-bg-card shadow-prism-card">
+        <div className="prism-panel-master overflow-hidden">
           <table className="w-full text-left font-mono text-xs">
             <thead>
-              <tr className="bg-prism-bg-elevated/80 border-b border-prism-border-subtle text-[10px] text-prism-text-muted uppercase">
-                <th className="py-3 px-4 font-semibold">Table</th>
-                <th className="py-3 px-4 font-semibold">Record Count</th>
-                <th className="py-3 px-4 font-semibold">Description</th>
-                <th className="py-3 px-4 font-semibold">Allowlisted Columns</th>
+              <tr className="bg-slate-50/90 border-b border-slate-200/80 text-[10px] text-slate-600 uppercase tracking-wider font-semibold">
+                <th className="py-3.5 px-5">Tabela</th>
+                <th className="py-3.5 px-5">Volume de Registros</th>
+                <th className="py-3.5 px-5">Descrição Semântica</th>
+                <th className="py-3.5 px-5">Colunas Catalogadas</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-prism-border-subtle/40">
+            <tbody className="divide-y divide-slate-100 font-sans">
               {active_source.available_tables.map((t) => (
-                <tr key={t.table_name} className="hover:bg-prism-bg-elevated/30 transition-colors">
-                  <td className="py-3.5 px-4 font-semibold text-prism-accent-blue">{t.table_name}</td>
-                  <td className="py-3.5 px-4 text-prism-text-primary">{t.row_count.toLocaleString()}</td>
-                  <td className="py-3.5 px-4 text-prism-text-secondary max-w-xs">{t.description}</td>
-                  <td className="py-3.5 px-4 text-prism-text-muted text-[10px]">{t.columns.slice(0, 4).join(', ')}... ({t.columns.length} total)</td>
+                <tr key={t.table_name} className="hover:bg-slate-50/70 transition-colors">
+                  <td className="py-4 px-5 font-bold font-mono text-indigo-600">{t.table_name}</td>
+                  <td className="py-4 px-5 font-bold font-mono text-slate-900">{t.row_count.toLocaleString()}</td>
+                  <td className="py-4 px-5 text-slate-600 text-xs max-w-sm leading-relaxed">{t.description}</td>
+                  <td className="py-4 px-5 text-slate-500 font-mono text-[11px]">{t.columns.slice(0, 4).join(', ')}... ({t.columns.length} colunas)</td>
                 </tr>
               ))}
             </tbody>
