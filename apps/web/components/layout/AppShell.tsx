@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
+import clsx from 'clsx';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
 import { CommandPalette } from './CommandPalette';
@@ -40,9 +41,14 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
   }
 
   return (
-    <div className="min-h-screen bg-prism-bg-canvas text-prism-text-primary flex overflow-x-hidden font-sans">
-      {/* Desktop Sidebar */}
-      <div className="hidden lg:block shrink-0 sticky top-0 h-screen">
+    <div className="min-h-screen bg-[#f8f9fc] text-slate-900 font-sans">
+      {/* Desktop Fixed Infinite Sidebar (always 100% viewport height from top to bottom) */}
+      <div
+        className={clsx(
+          'hidden lg:block fixed inset-y-0 left-0 z-40 h-screen transition-all duration-300 shadow-2xl',
+          sidebarCollapsed ? 'w-[4.75rem]' : 'w-68'
+        )}
+      >
         <Sidebar
           collapsed={sidebarCollapsed}
           onToggleCollapse={() => setSidebarCollapsed((prev) => !prev)}
@@ -68,8 +74,13 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
         </div>
       )}
 
-      {/* Main Content Layout */}
-      <div className="flex-1 flex flex-col min-w-0 bg-[#f8f9fc]">
+      {/* Main Content Layout with Dynamic Left Offset */}
+      <div
+        className={clsx(
+          'min-h-screen flex flex-col transition-all duration-300 bg-[#f8f9fc]',
+          sidebarCollapsed ? 'lg:pl-[4.75rem]' : 'lg:pl-68'
+        )}
+      >
         <Topbar
           onOpenCommandPalette={() => setCommandPaletteOpen(true)}
           onMobileMenuToggle={() => setMobileMenuOpen((prev) => !prev)}

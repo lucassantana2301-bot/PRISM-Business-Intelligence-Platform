@@ -38,10 +38,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggleCollapse, o
 
   return (
     <aside
-      className={clsx(
-        'relative flex h-screen flex-col border-r border-[#272c38] bg-[#161922] text-slate-300 transition-all duration-300 select-none overflow-x-hidden shadow-2xl',
-        collapsed ? 'w-[4.75rem]' : 'w-68'
-      )}
+      className="relative flex h-full min-h-screen w-full flex-col border-r border-[#272c38] bg-[#161922] text-slate-300 transition-all duration-300 select-none overflow-x-hidden shadow-2xl"
       style={{
         backgroundImage: 'radial-gradient(circle at 10% 0%, rgba(99, 102, 241, 0.08) 0%, transparent 60%), linear-gradient(180deg, #181b24 0%, #14171f 100%)',
       }}
