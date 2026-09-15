@@ -13,10 +13,14 @@ import { AlarmRulesModal } from './AlarmRulesModal';
 import { ExecutiveAudioPlayer } from './ExecutiveAudioPlayer';
 import { LiveStreamTicker } from './LiveStreamTicker';
 import { MetricDrilldownModal } from './MetricDrilldownModal';
+import { GoalsThermometer } from './GoalsThermometer';
+import { WhatIfSimulator } from './WhatIfSimulator';
+import { BoardroomModeModal } from './BoardroomModeModal';
 import { AnalyticalCoordinate } from '@/components/ui/AnalyticalCoordinate';
 import { TimeGrain, MetricSummaryValue } from '@/lib/contracts/analytics';
 import { fetchOverviewDashboardData, OverviewDashboardData, prewarmOverviewCache } from '@/lib/api/analytics';
 import { formatCurrency, formatDelta, formatExecutionTime, formatPercentage } from '@/lib/utils/formatters';
+import { Tv } from 'lucide-react';
 
 export const OverviewDashboardClient: React.FC = () => {
   const [selectedPreset, setSelectedPreset] = useState<DateRangePreset>('30d');
@@ -26,6 +30,7 @@ export const OverviewDashboardClient: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [isAlarmModalOpen, setIsAlarmModalOpen] = useState(false);
+  const [isBoardroomOpen, setIsBoardroomOpen] = useState(false);
 
   // Drilldown state
   const [drilldownMetric, setDrilldownMetric] = useState<{
@@ -173,6 +178,17 @@ export const OverviewDashboardClient: React.FC = () => {
 
           <button
             type="button"
+            onClick={() => setIsBoardroomOpen(true)}
+            disabled={isLoading || !data}
+            className="prism-secondary-button text-xs bg-slate-900 text-white hover:bg-slate-800 border-slate-700 shadow-xs"
+            title="Abrir Modo Apresentação / Painel de TV Executivo"
+          >
+            <Tv className="h-3.5 w-3.5 text-indigo-400" />
+            <span className="font-semibold">Modo Diretoria (TV)</span>
+          </button>
+
+          <button
+            type="button"
             onClick={() => setIsAlarmModalOpen(true)}
             className="prism-secondary-button text-xs"
             title="Configurar Alarmes e Salvaguardas CloudWatch"
@@ -208,6 +224,12 @@ export const OverviewDashboardClient: React.FC = () => {
       {/* 03 — AI EXECUTIVE AUDIO PLAYER WITH EQUALIZER */}
       <ExecutiveAudioPlayer data={data} periodLabel={activeRange.label} />
 
+      {/* 03.1 — GOALS & OKRS THERMOMETER */}
+      <GoalsThermometer
+        currentRevenue={grossRevenue?.current_value}
+        periodLabel={activeRange.label}
+      />
+
       {/* ERROR ALERT */}
       {error && (
         <div
@@ -239,6 +261,14 @@ export const OverviewDashboardClient: React.FC = () => {
         periodLabel={activeRange.label}
         comparisonLabel={activeRange.comparisonLabel}
         isLoading={isLoading}
+      />
+
+      {/* 04.1 — WHAT-IF FORECASTING SIMULATOR */}
+      <WhatIfSimulator
+        baseRevenue={grossRevenue?.current_value}
+        baseConversion={conversion?.current_value}
+        baseAov={averageOrderValue?.current_value}
+        baseOrders={orders?.current_value}
       />
 
       {/* 05 — EDITORIAL INTELLIGENCE BRIEF */}
@@ -298,6 +328,13 @@ export const OverviewDashboardClient: React.FC = () => {
       <AlarmRulesModal
         isOpen={isAlarmModalOpen}
         onClose={() => setIsAlarmModalOpen(false)}
+      />
+
+      {/* Boardroom TV Mode Modal */}
+      <BoardroomModeModal
+        isOpen={isBoardroomOpen}
+        onClose={() => setIsBoardroomOpen(false)}
+        data={data}
       />
 
       {/* Metric Root-Cause Drilldown Modal */}

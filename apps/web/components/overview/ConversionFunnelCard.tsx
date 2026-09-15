@@ -12,6 +12,14 @@ interface ConversionFunnelCardProps {
   isLoading?: boolean;
 }
 
+const FUNNEL_STEP_LABELS: Record<string, string> = {
+  '1. Store Sessions': '1. Sessões da Loja',
+  '2. Product Views': '2. Visualizações de Produto',
+  '3. Add to Cart': '3. Adições ao Carrinho',
+  '4. Checkout Started': '4. Checkouts Iniciados',
+  '5. Completed Purchase': '5. Pedidos Concluídos',
+};
+
 export const ConversionFunnelCard: React.FC<ConversionFunnelCardProps> = ({
   data,
   isLoading = false,
@@ -59,6 +67,7 @@ export const ConversionFunnelCard: React.FC<ConversionFunnelCardProps> = ({
             {data.map((step, idx) => {
               const convVal = parseFloat(step.conversion.replace('%', '')) || 0;
               const dropVal = parseFloat(step.drop.replace('%', '')) || 0;
+              const stepLabel = FUNNEL_STEP_LABELS[step.step] || step.step;
 
               return (
                 <div
@@ -70,7 +79,7 @@ export const ConversionFunnelCard: React.FC<ConversionFunnelCardProps> = ({
                       <span className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-100 font-mono text-[10px] font-bold text-slate-700">
                         {idx + 1}
                       </span>
-                      <span className="font-semibold text-slate-800">{step.step}</span>
+                      <span className="font-semibold text-slate-800">{stepLabel}</span>
                     </div>
 
                     <div className="flex items-center gap-4 font-mono text-xs tabular-nums">

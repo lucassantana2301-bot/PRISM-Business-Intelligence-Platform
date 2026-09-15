@@ -17,6 +17,8 @@ import { formatCurrency, formatInteger, formatPercentage } from '@/lib/utils/for
 import { ChannelPerformance, DevicePerformance } from '@/lib/mock/ecommerce';
 import clsx from 'clsx';
 
+import { CustomerCohortMatrix } from './CustomerCohortMatrix';
+
 export interface AnalyticsWorkspaceProps {
   channelData: ChannelPerformance[];
   deviceData: DevicePerformance[];
@@ -30,6 +32,9 @@ export const AnalyticsWorkspace: React.FC<AnalyticsWorkspaceProps> = ({
 
   return (
     <div className="space-y-8">
+      {/* Customer Cohort Matrix Heatmap */}
+      <CustomerCohortMatrix />
+
       {/* Dimension Switcher Control Bar */}
       <section className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-3.5 rounded-xl border border-slate-200/80 bg-white shadow-2xs">
         <div className="flex items-center gap-3 flex-wrap">
