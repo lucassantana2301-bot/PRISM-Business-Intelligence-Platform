@@ -259,7 +259,7 @@ export const DataExplorerClient: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* 1. Dataset Selector Tabs */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 border-b border-slate-200/80">
+      <div className="flex items-center gap-2.5 overflow-x-auto pb-1 border-b border-slate-200/80">
         {datasets.map((d) => {
           const isSelected = selectedDataset === d.dataset_id;
           return (
@@ -267,16 +267,16 @@ export const DataExplorerClient: React.FC = () => {
               key={d.dataset_id}
               type="button"
               onClick={() => handleDatasetSwitch(d.dataset_id)}
-              className={`px-4 py-2.5 rounded-xl text-xs font-medium flex items-center gap-2.5 transition-all flex-shrink-0 ${
+              className={`px-4 py-2.5 rounded-xl text-xs font-medium flex items-center gap-2.5 transition-all duration-200 flex-shrink-0 hover-lift ${
                 isSelected
-                  ? 'bg-indigo-50/80 border border-indigo-200 text-indigo-950 font-semibold shadow-2xs'
+                  ? 'bg-indigo-50/90 border border-indigo-200 text-indigo-950 font-bold shadow-2xs'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-white border border-transparent'
               }`}
             >
               <TableIcon className={`w-4 h-4 ${isSelected ? 'text-indigo-600' : 'text-slate-400'}`} />
               <span>{d.display_name}</span>
-              <span className={`px-2 py-0.5 rounded text-[10px] font-mono ${
-                isSelected ? 'bg-indigo-100 text-indigo-800 font-bold' : 'bg-slate-100 text-slate-500'
+              <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono ${
+                isSelected ? 'bg-indigo-600 text-white font-bold shadow-2xs' : 'bg-slate-100 text-slate-500 font-semibold'
               }`}>
                 {formatInteger(d.row_count)}
               </span>
@@ -346,10 +346,10 @@ export const DataExplorerClient: React.FC = () => {
             type="button"
             disabled={isExporting || isLoading}
             onClick={handleExport}
-            className="px-3.5 py-2 text-xs font-medium rounded-xl bg-slate-900 hover:bg-slate-800 text-white flex items-center gap-1.5 transition-colors disabled:opacity-50 shadow-xs"
+            className="px-4 py-2 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-white flex items-center gap-2 transition-all duration-200 disabled:opacity-50 shadow-sm hover-lift"
           >
-            <Download className="w-3.5 h-3.5 text-emerald-400" />
-            <span>{isExporting ? 'Exportando…' : 'Exportar CSV'}</span>
+            <Download className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
+            <span>{isExporting ? 'Exportando...' : 'Exportar CSV'}</span>
           </button>
         </div>
       </div>

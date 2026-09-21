@@ -1,16 +1,12 @@
 'use client';
 
 import React, { useState } from 'react';
+import { usePathname } from 'next/navigation';
 import {
-  Database,
   Menu,
-  Search,
   Sparkles,
-  Activity,
-  Globe,
   ChevronDown,
   Terminal,
-  ShieldCheck,
   Check,
   Zap,
 } from 'lucide-react';
@@ -27,6 +23,15 @@ export const Topbar: React.FC<TopbarProps> = ({
   onMobileMenuToggle,
   onOpenCloudShell,
 }) => {
+  const pathname = usePathname();
+  const section = {
+    '/dashboard': 'Visão geral',
+    '/analytics': 'Análises',
+    '/explorer': 'Explorador',
+    '/insights': 'Insights',
+    '/ask': 'Ask PRISM',
+    '/sources': 'Fontes',
+  }[pathname] ?? 'Workspace';
   const { activeRegion, setActiveRegion, activeEnv, setActiveEnv, cacheHitRate } = useRegion();
   const [showRegionMenu, setShowRegionMenu] = useState(false);
   const [showEnvMenu, setShowEnvMenu] = useState(false);
@@ -44,12 +49,19 @@ export const Topbar: React.FC<TopbarProps> = ({
           <Menu className="h-4 w-4" />
         </button>
 
+        <div className="hidden xl:flex items-center gap-2 text-xs">
+          <span className="font-mono uppercase tracking-widest text-slate-400">PRISM</span>
+          <span className="text-slate-300">/</span>
+          <span className="font-semibold text-slate-800">{section}</span>
+        </div>
+
         {/* AWS Organization & Tenant Switcher Dropdown */}
         <div className="relative">
           <button
             type="button"
             onClick={() => setShowEnvMenu(!showEnvMenu)}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50/80 hover:bg-white hover:border-slate-300 transition-all text-xs shadow-2xs"
+            className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50/80 hover:bg-white hover:border-slate-300 transition-all text-xs shadow-2xs"
+            aria-expanded={showEnvMenu}
           >
             <div className="flex items-center gap-1.5">
               <span className="font-bold text-slate-900">{activeEnv.account}</span>
@@ -90,7 +102,7 @@ export const Topbar: React.FC<TopbarProps> = ({
       </div>
 
       {/* 2. Center Command & Search Dock */}
-      <div className="flex-1 max-w-lg mx-auto">
+      <div className="flex-1 min-w-0 max-w-lg mx-auto">
         <button
           type="button"
           onClick={onOpenCommandPalette}
@@ -104,7 +116,7 @@ export const Topbar: React.FC<TopbarProps> = ({
             <span className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-indigo-600 hidden md:inline notranslate" translate="no">
               ASK PRISM
             </span>
-            <span className="text-xs text-slate-500 truncate group-hover:text-slate-700 transition-colors">
+            <span className="hidden sm:block text-xs text-slate-500 truncate group-hover:text-slate-700 transition-colors">
               Consulte faturamento, canais, ROAS ou comandos…
             </span>
           </div>
@@ -121,7 +133,8 @@ export const Topbar: React.FC<TopbarProps> = ({
           <button
             type="button"
             onClick={() => setShowRegionMenu(!showRegionMenu)}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-200/80 bg-slate-50 hover:bg-white hover:border-slate-300 transition-all text-xs font-mono shadow-2xs"
+            className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-200/80 bg-slate-50 hover:bg-white hover:border-slate-300 transition-all text-xs font-mono shadow-2xs"
+            aria-expanded={showRegionMenu}
           >
             <span className="text-sm leading-none">{activeRegion.flag}</span>
             <span className="font-bold text-slate-800 hidden sm:inline">{activeRegion.id}</span>

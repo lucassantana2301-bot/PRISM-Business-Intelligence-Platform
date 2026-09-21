@@ -251,14 +251,14 @@ export const OverviewDashboardClient: React.FC = () => {
         </div>
       </section>
 
-      {/* 03 — AI EXECUTIVE AUDIO PLAYER WITH EQUALIZER */}
-      <ExecutiveAudioPlayer data={data} periodLabel={activeRange.label} />
-
-      {/* 03.1 — GOALS & OKRS THERMOMETER */}
-      <GoalsThermometer
-        currentRevenue={grossRevenue?.current_value}
-        periodLabel={activeRange.label}
-      />
+      {/* 03 — AI DECISION & EXECUTIVE GOALS GRID */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <GoalsThermometer
+          currentRevenue={grossRevenue?.current_value}
+          periodLabel={activeRange.label}
+        />
+        <ExecutiveAudioPlayer data={data} periodLabel={activeRange.label} />
+      </div>
 
       {/* ERROR ALERT */}
       {error && (
@@ -293,22 +293,22 @@ export const OverviewDashboardClient: React.FC = () => {
         isLoading={isLoading}
       />
 
-      {/* 04.1 — WHAT-IF FORECASTING SIMULATOR */}
-      <WhatIfSimulator
-        baseRevenue={grossRevenue?.current_value}
-        baseConversion={conversion?.current_value}
-        baseAov={averageOrderValue?.current_value}
-        baseOrders={orders?.current_value}
-      />
+      {/* 05 — PREDICTIVE & STATISTICAL INTELLIGENCE GRID */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <WhatIfSimulator
+          baseRevenue={grossRevenue?.current_value}
+          baseConversion={conversion?.current_value}
+          baseAov={averageOrderValue?.current_value}
+          baseOrders={orders?.current_value}
+        />
+        <AnomalyDetectionRadar />
+      </div>
 
-      {/* 04.2 — REAL-TIME STATISTICAL ANOMALY DETECTION RADAR */}
-      <AnomalyDetectionRadar />
-
-      {/* 05 — EDITORIAL INTELLIGENCE BRIEF */}
-      {!isLoading && <IntelligenceBrief signals={signals} />}
-
-      {/* 06 — BRAZILIAN GEOGRAPHIC RADAR & HEATMAP */}
-      <BrazilGeoHeatmap />
+      {/* 06 — EDITORIAL BRIEF & GEOGRAPHIC RADAR GRID */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        {!isLoading && <IntelligenceBrief signals={signals} />}
+        <BrazilGeoHeatmap />
+      </div>
 
       {/* 07 — OPERATIONAL EVIDENCE FIELD */}
       <section className="space-y-6" aria-labelledby="evidence-heading">

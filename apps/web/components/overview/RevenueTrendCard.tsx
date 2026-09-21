@@ -94,108 +94,141 @@ export const RevenueTrendCard: React.FC<RevenueTrendCardProps> = ({
   };
 
   return (
-    <div className="flex flex-col justify-between p-6 sm:p-8 h-full">
+    <div className="flex flex-col justify-between p-6 sm:p-8 h-full bg-gradient-to-br from-white via-white to-slate-50/50">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
         <div>
           <AnalyticalCoordinate dimension="monetary">EVD.02 · TREND</AnalyticalCoordinate>
           <h3 className="mt-1.5 text-lg font-bold tracking-tight text-slate-900">
-            Receita e Trajetória de Crescimento
+            Trajetória de {metricView === 'revenue' ? 'Receita Líquida' : 'Volume de Pedidos'}
           </h3>
           <p className="mt-0.5 text-xs text-slate-500">
-            Séries temporais canônicas agregadas por {grainLabels[timeGrain]}
+            Série temporal canônica agregada por <strong className="text-slate-700">{grainLabels[timeGrain]}</strong> com comparação ao período anterior
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap self-start sm:self-auto">
           <ToggleGroup
-            ariaLabel="Granularidade temporal"
-            value={timeGrain}
-            onChange={onTimeGrainChange}
             options={[
-              { id: 'day', label: 'Dia' },
-              { id: 'week', label: 'Semana' },
-              { id: 'month', label: 'Mês' },
-            ]}
-          />
-          <ToggleGroup
-            ariaLabel="Métrica exibida"
-            value={metricView}
-            onChange={setMetricView}
-            options={[
-              { id: 'revenue', label: 'Receita' },
+              { id: 'revenue', label: 'Receita (R$)' },
               { id: 'orders', label: 'Pedidos' },
             ]}
+            value={metricView}
+            onChange={setMetricView}
+            ariaLabel="Seletor de métrica do gráfico"
+          />
+
+          <ToggleGroup
+            options={[
+              { id: 'day', label: 'D' },
+              { id: 'week', label: 'S' },
+              { id: 'month', label: 'M' },
+            ]}
+            value={timeGrain}
+            onChange={onTimeGrainChange}
+            ariaLabel="Grão temporal do gráfico"
           />
         </div>
       </div>
 
-      <div className="h-72 w-full">
+      <div className="h-[280px] w-full mt-2">
         {isLoading ? (
-          <div className="h-full w-full flex items-center justify-center rounded-xl bg-slate-50 animate-pulse">
-            <span className="text-xs text-slate-400">Carregando dados agregados...</span>
+          <div className="h-full w-full flex items-center justify-center text-xs text-slate-400 bg-slate-50/50 rounded-xl animate-shimmer">
+            Processando série temporal...
           </div>
         ) : data.length === 0 ? (
-          <div className="h-full flex items-center justify-center text-xs text-slate-400">
-            Nenhum dado de trajetória no período selecionado
+          <div className="h-full w-full flex items-center justify-center text-xs text-slate-400">
+            Nenhum dado de tendência no período
           </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+            <AreaChart data={data} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
               <defs>
-                <linearGradient id="revenueTrendFill" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#5361ff" stopOpacity={0.16} />
+                <linearGradient id="trendRevenueGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#5361ff" stopOpacity={0.35} />
+                  <stop offset="60%" stopColor="#7967ff" stopOpacity={0.10} />
                   <stop offset="100%" stopColor="#5361ff" stopOpacity={0.0} />
                 </linearGradient>
+                <linearGradient id="trendOrdersGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#0ea5e9" stopOpacity={0.35} />
+                  <stop offset="60%" stopColor="#38bdf8" stopOpacity={0.10} />
+                  <stop offset="100%" stopColor="#0ea5e9" stopOpacity={0.0} />
+                </linearGradient>
+                <linearGradient id="trendPreviousGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#94a3b8" stopOpacity={0.15} />
+                  <stop offset="100%" stopColor="#94a3b8" stopOpacity={0.0} />
+                </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
               <XAxis
                 dataKey="date"
-                stroke="#94a3b8"
-                fontSize={11}
-                tickLine={false}
-                axisLine={{ stroke: '#e2e8f0' }}
                 tickFormatter={formatAxisDate}
+                tick={{ fontSize: 11, fill: '#64748b', fontFamily: 'monospace' }}
+                axisLine={{ stroke: '#e2e8f0' }}
+                tickLine={false}
               />
               <YAxis
-                stroke="#94a3b8"
-                fontSize={11}
-                tickLine={false}
-                axisLine={false}
-                width={48}
                 tickFormatter={(val) =>
-                  metricView === 'revenue' ? `$${(val / 1000).toFixed(1)}k` : `${val}`
+                  metricView === 'revenue'
+                    ? val >= 1000
+                      ? `R$ ${(val / 1000).toFixed(0)}k`
+                      : `R$ ${val}`
+                    : formatInteger(val)
                 }
+                tick={{ fontSize: 11, fill: '#64748b', fontFamily: 'monospace' }}
+                axisLine={false}
+                tickLine={false}
               />
               <Tooltip
-                cursor={{ stroke: '#cbd5e1', strokeWidth: 1, strokeDasharray: '4 4' }}
-                formatter={(val: any) => [
-                  metricView === 'revenue' ? formatCurrency(Number(val)) : formatInteger(Number(val)),
-                  metricView === 'revenue' ? 'Receita' : 'Pedidos',
-                ]}
-                labelFormatter={(l) => formatAxisDate(String(l))}
-                contentStyle={{
-                  backgroundColor: '#080c16',
-                  border: '1px solid #1e293b',
-                  borderRadius: '8px',
-                  boxShadow: '0 12px 28px -8px rgba(0, 0, 0, 0.4)',
-                  fontSize: '12px',
-                  color: '#f8fafc',
-                  fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, monospace',
-                  padding: '8px 12px',
+                content={({ active, payload, label }) => {
+                  if (!active || !payload || !payload.length) return null;
+                  const currentVal = payload[0]?.value as number;
+                  const prevVal = payload[1]?.value as number | undefined;
+
+                  return (
+                    <div className="rounded-xl border border-slate-200/90 bg-white/95 backdrop-blur-md p-3.5 shadow-xl text-xs space-y-1.5 min-w-[170px]">
+                      <span className="font-mono text-[10px] text-slate-400 uppercase tracking-wider block font-bold">
+                        {String(label)}
+                      </span>
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-slate-600 font-medium">Período Atual:</span>
+                        <strong className="text-slate-900 font-mono font-bold">
+                          {metricView === 'revenue'
+                            ? formatCurrency(currentVal)
+                            : formatInteger(currentVal)}
+                        </strong>
+                      </div>
+                      {prevVal != null && (
+                        <div className="flex items-center justify-between gap-3 text-slate-400 pt-1 border-t border-slate-100">
+                          <span>Anterior:</span>
+                          <span className="font-mono">
+                            {metricView === 'revenue'
+                              ? formatCurrency(prevVal)
+                              : formatInteger(prevVal)}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  );
                 }}
-                labelStyle={{ color: '#94a3b8', fontSize: '10px', marginBottom: '4px' }}
               />
+              {data[0]?.previous !== undefined && (
+                <Area
+                  type="monotone"
+                  dataKey="previous"
+                  stroke="#cbd5e1"
+                  strokeWidth={1.5}
+                  strokeDasharray="4 4"
+                  fill="url(#trendPreviousGradient)"
+                />
+              )}
               <Area
                 type="monotone"
                 dataKey={metricView === 'revenue' ? 'net_revenue' : 'orders'}
-                stroke="#5361ff"
-                strokeWidth={2.25}
-                fillOpacity={1}
-                fill="url(#revenueTrendFill)"
-                activeDot={{ r: 4, fill: '#5361ff', stroke: '#FFFFFF', strokeWidth: 2 }}
-                isAnimationActive={!isLoading}
-                animationDuration={280}
-                animationEasing="ease-out"
+                stroke={metricView === 'revenue' ? '#5361ff' : '#0ea5e9'}
+                strokeWidth={2.5}
+                fill={metricView === 'revenue' ? 'url(#trendRevenueGradient)' : 'url(#trendOrdersGradient)'}
+                dot={false}
+                activeDot={{ r: 5, fill: metricView === 'revenue' ? '#5361ff' : '#0ea5e9', stroke: '#ffffff', strokeWidth: 2 }}
               />
             </AreaChart>
           </ResponsiveContainer>

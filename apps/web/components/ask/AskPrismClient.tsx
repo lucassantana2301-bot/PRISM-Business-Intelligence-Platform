@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import { ArrowRight, RotateCcw, Send, Sparkles, Database, Layers, CheckCircle2, Terminal, ShieldCheck, Zap } from 'lucide-react';
+import { ArrowRight, RotateCcw, Send, Sparkles, Database, Layers, CheckCircle2, Terminal, ShieldCheck, Zap, Copy, Check, MessageSquare } from 'lucide-react';
 import { AskPrismResponse, ConversationContext } from '@/lib/contracts/ask';
 import { askPrism } from '@/lib/api/ask_client';
 import { VisualizationRenderer } from '@/components/visualization/VisualizationRenderer';
@@ -47,6 +47,7 @@ export const AskPrismClient: React.FC = () => {
   const [input, setInput] = useState('');
   const [context, setContext] = useState<ConversationContext | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [copiedTurnId, setCopiedTurnId] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const endRef = useRef<HTMLDivElement>(null);
 
@@ -59,6 +60,16 @@ export const AskPrismClient: React.FC = () => {
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     endRef.current?.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'nearest' });
   }, [turns, isLoading]);
+
+  const copyToClipboard = async (text: string, turnId: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedTurnId(turnId);
+      setTimeout(() => setCopiedTurnId(null), 2000);
+    } catch {
+      // Fallback
+    }
+  };
 
   const submit = async (candidate?: string) => {
     const question = (candidate ?? input).trim();
@@ -128,7 +139,7 @@ export const AskPrismClient: React.FC = () => {
         {turns.length === 0 && (
           <div className="mt-8 space-y-4">
             <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-indigo-600" />
+              <Sparkles className="w-4 h-4 text-indigo-600 animate-pulse" />
               <span className="text-xs font-mono font-semibold text-slate-700 uppercase tracking-wider">
                 Consultas sugeridas de alto impacto
               </span>
@@ -139,10 +150,10 @@ export const AskPrismClient: React.FC = () => {
                   key={item.question}
                   type="button"
                   onClick={() => void submit(item.question)}
-                  className="group flex flex-col justify-between p-5 text-left rounded-xl bg-slate-50/70 hover:bg-white border border-slate-200/80 hover:border-indigo-300 transition-all duration-200 shadow-2xs hover:shadow-sm"
+                  className="group relative flex flex-col justify-between p-5 text-left rounded-xl bg-gradient-to-b from-slate-50/90 to-slate-50/50 hover:from-white hover:to-indigo-50/30 border border-slate-200/80 hover:border-indigo-300 transition-all duration-300 shadow-2xs hover:shadow-md hover-lift"
                 >
                   <div>
-                    <span className="inline-block px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-white border border-slate-200 text-slate-600 group-hover:text-indigo-600 group-hover:border-indigo-200 transition-colors">
+                    <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-white border border-slate-200 text-slate-600 group-hover:text-indigo-600 group-hover:border-indigo-200 transition-colors shadow-2xs">
                       {item.tag}
                     </span>
                     <p className="mt-3 text-sm font-semibold text-slate-900 group-hover:text-indigo-950 transition-colors">
@@ -152,7 +163,7 @@ export const AskPrismClient: React.FC = () => {
                       {item.desc}
                     </p>
                   </div>
-                  <div className="mt-4 flex items-center gap-1.5 text-xs font-semibold text-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="mt-4 flex items-center gap-1.5 text-xs font-semibold text-indigo-600 opacity-0 group-hover:opacity-100 transition-all duration-200 group-hover:translate-x-1">
                     <span>Executar refração</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </div>
@@ -291,16 +302,36 @@ export const AskPrismClient: React.FC = () => {
                     </div>
 
                     {/* Right: Decision Synthesis (5 cols) */}
-                    <div className="lg:col-span-5 flex flex-col justify-between p-6 rounded-xl bg-gradient-to-br from-indigo-50/70 via-white to-slate-50 border border-indigo-200/80 shadow-2xs">
+                    <div className="lg:col-span-5 flex flex-col justify-between p-6 rounded-xl bg-gradient-to-br from-indigo-50/70 via-white to-slate-50 border border-indigo-200/80 shadow-2xs hover:border-indigo-300 transition-colors">
                       <div>
                         <div className="flex items-center justify-between border-b border-indigo-100 pb-3">
                           <AnalyticalCoordinate dimension="monetary">
                             DEC.{String(index + 1).padStart(2, '0')} · SYNTHESIS & ACTIONS
                           </AnalyticalCoordinate>
-                          <span className="inline-flex items-center gap-1 text-[10px] font-mono font-semibold text-indigo-700 bg-indigo-100/60 px-2 py-0.5 rounded">
-                            <CheckCircle2 className="w-3 h-3 text-indigo-600" />
-                            {(response.confidence * 100).toFixed(0)}% Confiança
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => void copyToClipboard(response.answer, turn.id)}
+                              className="inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded bg-white hover:bg-indigo-50 border border-slate-200 hover:border-indigo-300 text-slate-600 hover:text-indigo-700 transition-all shadow-2xs"
+                              title="Copiar resposta sintetizada"
+                            >
+                              {copiedTurnId === turn.id ? (
+                                <>
+                                  <Check className="w-3 h-3 text-emerald-600" />
+                                  <span className="text-emerald-700 font-semibold">Copiado</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Copy className="w-3 h-3 text-slate-400" />
+                                  <span>Copiar</span>
+                                </>
+                              )}
+                            </button>
+                            <span className="inline-flex items-center gap-1 text-[10px] font-mono font-semibold text-indigo-700 bg-indigo-100/60 px-2 py-0.5 rounded">
+                              <CheckCircle2 className="w-3 h-3 text-indigo-600" />
+                              {(response.confidence * 100).toFixed(0)}% Confiança
+                            </span>
+                          </div>
                         </div>
 
                         <div className="mt-4 space-y-3 text-sm font-normal text-slate-700">
@@ -311,7 +342,10 @@ export const AskPrismClient: React.FC = () => {
                       </div>
 
                       <div className="mt-6 pt-4 border-t border-indigo-100 flex items-center justify-between text-[10px] font-mono text-slate-500">
-                        <span>PRISM NATURAL SYNTHESIS</span>
+                        <span className="flex items-center gap-1 text-indigo-600 font-semibold">
+                          <Zap className="w-3 h-3 text-indigo-500" />
+                          PRISM NATURAL SYNTHESIS
+                        </span>
                         <span>TURN #{response.context.turn_count}</span>
                       </div>
                     </div>

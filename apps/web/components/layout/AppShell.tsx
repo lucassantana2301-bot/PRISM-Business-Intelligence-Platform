@@ -16,7 +16,7 @@ export interface AppShellProps {
 
 export const AppShell: React.FC<AppShellProps> = ({ children }) => {
   const pathname = usePathname();
-  const isLandingExperience = pathname === '/';
+  const isLandingExperience = pathname === '/experience';
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -77,7 +77,8 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
         {/* Mobile Drawer Backdrop */}
         {mobileMenuOpen && (
           <div
-            className="fixed inset-0 z-50 bg-black/80 lg:hidden transition-opacity"
+            className="fixed inset-0 z-50 bg-slate-950/70 lg:hidden transition-opacity"
+            role="presentation"
             onClick={() => setMobileMenuOpen(false)}
           >
             <div
@@ -96,7 +97,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
         {/* Main Content Layout with Dynamic Left Offset */}
         <div
           className={clsx(
-            'min-h-screen flex flex-col transition-all duration-300 bg-[#f8f9fc]',
+            'min-h-screen flex flex-col transition-all duration-300',
             sidebarCollapsed ? 'lg:pl-[4.75rem]' : 'lg:pl-68'
           )}
         >
@@ -106,7 +107,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
             onOpenCloudShell={() => setCloudShellOpen(true)}
           />
 
-          <main className="flex-1 px-6 sm:px-8 lg:px-12 py-8 max-w-[1720px] w-full mx-auto">
+          <main id="main-content" className="flex-1 px-4 sm:px-8 lg:px-10 xl:px-12 py-6 sm:py-8 lg:py-10 max-w-[1720px] w-full mx-auto">
             {children}
           </main>
         </div>

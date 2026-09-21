@@ -1,11 +1,15 @@
 import React from 'react';
-import { PrismExperience } from '@/components/experience/PrismExperience';
+import { OverviewDashboardClient } from '@/components/overview/OverviewDashboardClient';
 
 export const metadata = {
-  title: 'PRISM — Cinematic Product Experience',
-  description: 'Ask. Understand. Decide. Modern data intelligence and conversational analytics.',
+  title: 'Executive Overview — PRISM',
+  description: 'Ask. Understand. Decide. Modern business data intelligence platform connected to DuckDB.',
 };
 
-export default function LandingExperiencePage() {
-  return <PrismExperience />;
+export default function HomePage() {
+  return (
+    <div className="space-y-6">
+      <OverviewDashboardClient />
+    </div>
+  );
 }
