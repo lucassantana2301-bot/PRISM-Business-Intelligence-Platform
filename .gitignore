@@ -68,3 +68,6 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .eslintcache
+
+# Gerado pelo Next.js (next typegen / next build)
+next-env.d.ts

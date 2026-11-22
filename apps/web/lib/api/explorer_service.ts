@@ -428,7 +428,7 @@ export function exportExplorerCsv(query: ExplorerExportQuery): string {
 
   for (const row of exportedRows) {
     const values = projectedCols.map((col) => {
-      let val = row[col];
+      const val = row[col];
       let strVal = val !== null && val !== undefined ? String(val) : '';
 
       // Formula Injection Neutralization

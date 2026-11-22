@@ -1,6 +1,6 @@
 {
   "name": "prism-platform",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "description": "PRISM — Business Intelligence Platform: Ask. Understand. Decide.",
   "workspaces": [
@@ -11,7 +11,7 @@
     "build": "npm --workspace=apps/web run build",
     "lint": "npm --workspace=apps/web run lint",
     "typecheck": "npm --workspace=apps/web run typecheck",
-    "test": "npm --workspace=apps/web run test",
+    "test": "npm run test:analytics && npm run test:dashboard && npm run test:explorer && npm run test:ask && npm run test:visualization && npm run test:voice && npm run test:insights && npm run test:data-providers && npm run test:hardening",
     "generate:data": "npx tsx apps/web/scripts/generate_dataset.ts",
     "validate:data": "npx tsx apps/web/scripts/validate_dataset.ts",
     "test:analytics": "npx tsx apps/web/scripts/test_analytics_engine.ts",
@@ -32,6 +32,9 @@
     "nl-to-sql",
     "prism"
   ],
-  "author": "PRISM Team",
-  "license": "UNLICENSED"
+  "author": "Lucas Santana Santos",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.9"
+  }
 }

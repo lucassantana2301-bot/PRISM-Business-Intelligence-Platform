@@ -123,6 +123,7 @@ export const DataExplorerClient: React.FC = () => {
   }, [selectedDataset, visibleColumns, debouncedSearch, filters, sortBy, sortDirection, page, pageSize]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- busca ao mudar os filtros; o estado de loading é ligado antes da requisição assíncrona
     executeQuery();
   }, [executeQuery]);
 

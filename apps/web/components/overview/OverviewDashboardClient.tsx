@@ -72,6 +72,7 @@ export const OverviewDashboardClient: React.FC = () => {
   }, [activeRange.endDate, activeRange.startDate, timeGrain]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- busca ao mudar período/granularidade; o loading é ligado antes da requisição
     void loadDashboardData();
   }, [loadDashboardData]);
 

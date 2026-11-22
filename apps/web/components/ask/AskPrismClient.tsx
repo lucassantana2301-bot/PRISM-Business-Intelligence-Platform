@@ -42,19 +42,20 @@ const NarrativeLine: React.FC<{ text: string }> = ({ text }) => (
   </p>
 );
 
-export const AskPrismClient: React.FC = () => {
+type AskPrismClientProps = {
+  /** Pergunta pré-preenchida via `?q=` (lida no servidor pela página). */
+  initialQuestion?: string;
+};
+
+export const AskPrismClient: React.FC<AskPrismClientProps> = ({ initialQuestion = '' }) => {
   const [turns, setTurns] = useState<RefractionTurn[]>([]);
-  const [input, setInput] = useState('');
+  const [input, setInput] = useState(initialQuestion);
+  const turnCounter = useRef(0);
   const [context, setContext] = useState<ConversationContext | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [copiedTurnId, setCopiedTurnId] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const endRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const initialQuestion = new URLSearchParams(window.location.search).get('q');
-    if (initialQuestion) setInput(initialQuestion);
-  }, []);
 
   useEffect(() => {
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -74,7 +75,8 @@ export const AskPrismClient: React.FC = () => {
   const submit = async (candidate?: string) => {
     const question = (candidate ?? input).trim();
     if (!question || isLoading) return;
-    const id = `turn-${Date.now()}`;
+    turnCounter.current += 1;
+    const id = `turn-${turnCounter.current}`;
     setTurns((current) => [...current, { id, question }]);
     setInput('');
     setIsLoading(true);
