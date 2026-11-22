@@ -41,8 +41,8 @@ async function runSuite() {
   assert(q1.intent.metrics.includes('gross_revenue'), 'Q1 must query gross_revenue');
   assert(q1.intent.start_date === '2026-10-02' && q1.intent.end_date === '2026-10-31', 'Q1 date range mismatch');
   assert(q1.visualization?.type === 'metric', 'Q1 must recommend metric visualization');
-  assert(q1.answer.includes('$865,262.50'), `Q1 answer should contain $865,262.50 (got: ${q1.answer})`);
-  console.log('   ✓ [Q1] "Qual foi o faturamento nos últimos 30 dias?" -> $865,262.50 (Metric)');
+  assert(q1.answer.includes('$841,026.88'), `Q1 answer should contain $841,026.88 (got: ${q1.answer})`);
+  console.log('   ✓ [Q1] "Qual foi o faturamento nos últimos 30 dias?" -> $841,026.88 (Metric)');
 
   // Q2: Pedidos este mês
   const q2 = await executeAskPrismQuery({ message: 'Quantos pedidos tivemos este mês?' });
@@ -50,8 +50,8 @@ async function runSuite() {
   assert(q2.intent.metrics.includes('orders'), 'Q2 must query orders');
   assert(q2.intent.start_date === '2026-10-01' && q2.intent.end_date === '2026-10-31', 'Q2 date range mismatch');
   assert(q2.visualization?.type === 'metric', 'Q2 must recommend metric visualization');
-  assert(q2.answer.includes('791'), `Q2 answer should contain 791 (got: ${q2.answer})`);
-  console.log('   ✓ [Q2] "Quantos pedidos tivemos este mês?" -> 791 orders (Metric)');
+  assert(q2.answer.includes('779'), `Q2 answer should contain 779 (got: ${q2.answer})`);
+  console.log('   ✓ [Q2] "Quantos pedidos tivemos este mês?" -> 779 orders (Metric)');
 
   // Q3: Região com maior faturamento
   const q3 = await executeAskPrismQuery({ message: 'Qual região teve maior faturamento?' });
@@ -59,8 +59,8 @@ async function runSuite() {
   assert(q3.intent.metrics.includes('gross_revenue'), 'Q3 must query gross_revenue');
   assert(q3.intent.dimensions.includes('region'), 'Q3 must group by region');
   assert(q3.visualization?.type === 'bar', 'Q3 must recommend bar chart');
-  assert(q3.answer.includes('Southeast') && q3.answer.includes('$456,629.34'), `Q3 answer mismatch (got: ${q3.answer})`);
-  console.log('   ✓ [Q3] "Qual região teve maior faturamento?" -> Southeast ($456,629.34) (Bar)');
+  assert(q3.answer.includes('Southeast') && q3.answer.includes('$439,017.25'), `Q3 answer mismatch (got: ${q3.answer})`);
+  console.log('   ✓ [Q3] "Qual região teve maior faturamento?" -> Southeast ($439,017.25) (Bar)');
 
   // Q4: Receita por categoria
   const q4 = await executeAskPrismQuery({ message: 'Mostre a receita por categoria.' });
@@ -68,8 +68,8 @@ async function runSuite() {
   assert(q4.intent.metrics.includes('gross_revenue'), 'Q4 must query gross_revenue');
   assert(q4.intent.dimensions.includes('category'), 'Q4 must group by category');
   assert(q4.visualization?.type === 'bar', 'Q4 must recommend bar chart');
-  assert(q4.answer.includes('Electronics') && q4.answer.includes('$279,484.87'), `Q4 answer mismatch (got: ${q4.answer})`);
-  console.log('   ✓ [Q4] "Mostre a receita por categoria." -> Electronics ($279,484.87) (Bar)');
+  assert(q4.answer.includes('Electronics') && q4.answer.includes('$279,227.83'), `Q4 answer mismatch (got: ${q4.answer})`);
+  console.log('   ✓ [Q4] "Mostre a receita por categoria." -> Electronics ($279,227.83) (Bar)');
 
   // Q5: Dispositivo com pior conversão (Ranking ASC)
   const q5 = await executeAskPrismQuery({ message: 'Qual dispositivo teve a pior conversão?' });
@@ -94,9 +94,9 @@ async function runSuite() {
   assert(q7.intent.metrics.includes('gross_revenue'), 'Q7 must query gross_revenue');
   assert(q7.intent.comparison === 'previous_period', 'Q7 comparison must be previous_period');
   assert(q7.visualization?.type === 'metric', 'Q7 must recommend metric visualization');
-  assert(q7.answer.includes('$888,316.68'), `Q7 answer should contain $888,316.68 (got: ${q7.answer})`);
-  assert(q7.answer.includes('-9.61%'), `Q7 answer should contain -9.61% delta (got: ${q7.answer})`);
-  console.log('   ✓ [Q7] "Como o faturamento deste mês compara com o mês anterior?" -> $888.3k vs prev (-9.61%)');
+  assert(q7.answer.includes('$873,674.23'), `Q7 answer should contain $873,674.23 (got: ${q7.answer})`);
+  assert(q7.answer.includes('-16.60%'), `Q7 answer should contain -16.60% delta (got: ${q7.answer})`);
+  console.log('   ✓ [Q7] "Como o faturamento deste mês compara com o mês anterior?" -> $873.7k vs prev (-16.60%)');
 
   // Q8: Produtos com maior receita
   const q8 = await executeAskPrismQuery({ message: 'Quais foram os produtos com maior receita?' });
@@ -104,8 +104,8 @@ async function runSuite() {
   assert(q8.intent.metrics.includes('gross_revenue'), 'Q8 must query gross_revenue');
   assert(q8.intent.dimensions.includes('product_id'), 'Q8 must group by product_id');
   assert(q8.visualization?.type === 'table', 'Q8 must recommend table visualization');
-  assert(q8.answer.includes('PROD-1013') && q8.answer.includes('$19,783.00'), `Q8 answer mismatch (got: ${q8.answer})`);
-  console.log('   ✓ [Q8] "Quais foram os produtos com maior receita?" -> PROD-1013 ($19,783.00) (Table)');
+  assert(q8.answer.includes('PROD-1297') && q8.answer.includes('$27,508.88'), `Q8 answer mismatch (got: ${q8.answer})`);
+  console.log('   ✓ [Q8] "Quais foram os produtos com maior receita?" -> PROD-1297 ($27,508.88) (Table)');
 
   // Q9: Canal com mais sessões
   const q9 = await executeAskPrismQuery({ message: 'Qual canal trouxe mais sessões?' });
@@ -113,8 +113,8 @@ async function runSuite() {
   assert(q9.intent.metrics.includes('sessions'), 'Q9 must query sessions');
   assert(q9.intent.dimensions.includes('channel'), 'Q9 must group by channel');
   assert(q9.visualization?.type === 'bar', 'Q9 must recommend bar chart');
-  assert(q9.answer.includes('Organic Search') && q9.answer.includes('5,949'), `Q9 answer mismatch (got: ${q9.answer})`);
-  console.log('   ✓ [Q9] "Qual canal trouxe mais sessões?" -> Organic Search (5,949) (Bar)');
+  assert(q9.answer.includes('Organic Search') && q9.answer.includes('5,993'), `Q9 answer mismatch (got: ${q9.answer})`);
+  console.log('   ✓ [Q9] "Qual canal trouxe mais sessões?" -> Organic Search (5,993) (Bar)');
 
   // Q10: Campanha com melhor ROAS
   const q10 = await executeAskPrismQuery({ message: 'Qual campanha teve melhor ROAS?' });
@@ -122,8 +122,8 @@ async function runSuite() {
   assert(q10.intent.metrics.includes('roas'), 'Q10 must query roas');
   assert(q10.intent.dimensions.includes('campaign_name'), 'Q10 must group by campaign_name');
   assert(q10.visualization?.type === 'bar', 'Q10 must recommend bar chart');
-  assert(q10.answer.includes('Pre-Black Friday VIP Exclusive 2026') && q10.answer.includes('4.65x'), `Q10 answer mismatch (got: ${q10.answer})`);
-  console.log('   ✓ [Q10] "Qual campanha teve melhor ROAS?" -> Pre-Black Friday VIP Exclusive 2026 (4.65x) (Bar)');
+  assert(q10.answer.includes('Pre-Black Friday VIP Exclusive 2026') && q10.answer.includes('4.19x'), `Q10 answer mismatch (got: ${q10.answer})`);
+  console.log('   ✓ [Q10] "Qual campanha teve melhor ROAS?" -> Pre-Black Friday VIP Exclusive 2026 (4.19x) (Bar)');
 
   // Q11: Evolução semanal da receita
   const q11 = await executeAskPrismQuery({ message: 'Mostre a evolução semanal da receita.' });
@@ -131,8 +131,8 @@ async function runSuite() {
   assert(q11.intent.metrics.includes('gross_revenue'), 'Q11 must query gross_revenue');
   assert(q11.intent.time_grain === 'week', 'Q11 must have weekly time grain');
   assert(q11.visualization?.type === 'area', 'Q11 must recommend area chart');
-  assert(q11.answer.includes('$914,380.81'), `Q11 answer mismatch (got: ${q11.answer})`);
-  console.log('   ✓ [Q11] "Mostre a evolução semanal da receita." -> Weekly Trajectory ($914,380.81) (Area)');
+  assert(q11.answer.includes('$888,404.19'), `Q11 answer mismatch (got: ${q11.answer})`);
+  console.log('   ✓ [Q11] "Mostre a evolução semanal da receita." -> Weekly Trajectory ($888,404.19) (Area)');
 
   // =========================================================================
   // 2. Multi-Turn Context Inheritance, Topic Switching & Reset
@@ -226,8 +226,8 @@ async function runSuite() {
   const groundTest = await executeAskPrismQuery({ message: 'Qual foi o faturamento nos últimos 30 dias?' });
   const rawSum = groundTest.result?.metrics_summary?.gross_revenue?.current_value;
   assert(rawSum !== undefined, 'Raw gross_revenue must exist');
-  assert(groundTest.answer.includes('$865,262.50'), 'Formatted value must match raw sum $865,262.50');
-  console.log('   ✓ Narration value "$865,262.50" programmatically matches raw metric value');
+  assert(groundTest.answer.includes('$841,026.88'), 'Formatted value must match raw sum $841,026.88');
+  console.log('   ✓ Narration value "$841,026.88" programmatically matches raw metric value');
 
   // =========================================================================
   // 6. Ranking Semantics (Best vs Worst)

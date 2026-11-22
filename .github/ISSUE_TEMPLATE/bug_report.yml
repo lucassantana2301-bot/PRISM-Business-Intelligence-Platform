@@ -1,0 +1,47 @@
+name: 🐞 Bug
+description: Algo não funciona como deveria.
+labels: ["type: bug", "status: triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Obrigado por reportar! Vulnerabilidades de segurança **não** devem ser abertas aqui:
+        use o [reporte privado](https://github.com/lucassantana2301-bot/PRISM-Business-Intelligence-Platform/security/advisories/new).
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: O que aconteceu?
+      description: Descreva o comportamento atual e o esperado.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Como reproduzir
+      description: Passo a passo mínimo, com comandos, payloads ou arquivos de exemplo.
+      placeholder: |
+        1. ...
+        2. ...
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Versão
+      description: Tag da release, hash do commit ou imagem Docker usada.
+      placeholder: v1.0.0
+    validations:
+      required: true
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Ambiente
+      options: ["Vercel", "Local (next dev)", "API Python local"]
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs relevantes
+      description: Remova tokens, IDs de conta e qualquer dado sensível antes de colar.
+      render: shell

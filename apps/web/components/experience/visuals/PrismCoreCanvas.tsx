@@ -203,19 +203,19 @@ export const PrismCoreCanvas: React.FC<PrismCoreCanvasProps> = ({
         const pz = p.z * scaleMultiplier;
 
         // Rotate Y
-        let x1 = px * cosY - pz * sinY;
-        let y1 = py;
-        let z1 = px * sinY + pz * cosY;
+        const x1 = px * cosY - pz * sinY;
+        const y1 = py;
+        const z1 = px * sinY + pz * cosY;
 
         // Rotate X
-        let x2 = x1;
-        let y2 = y1 * cosX - z1 * sinX;
-        let z2 = y1 * sinX + z1 * cosX;
+        const x2 = x1;
+        const y2 = y1 * cosX - z1 * sinX;
+        const z2 = y1 * sinX + z1 * cosX;
 
         // Rotate Z
-        let x3 = x2 * cosZ - y2 * sinZ;
-        let y3 = x2 * sinZ + y2 * cosZ;
-        let z3 = z2;
+        const x3 = x2 * cosZ - y2 * sinZ;
+        const y3 = x2 * sinZ + y2 * cosZ;
+        const z3 = z2;
 
         // Perspective projection with focal distance
         const focal = 650;

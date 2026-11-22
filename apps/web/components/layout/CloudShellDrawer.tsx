@@ -47,11 +47,11 @@ export const CloudShellDrawer: React.FC<CloudShellDrawerProps> = ({
   const terminalEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    if (initialQuery) {
-      setInput(initialQuery);
-    }
-  }, [initialQuery]);
+  const [syncedQuery, setSyncedQuery] = useState(initialQuery);
+  if (initialQuery !== syncedQuery) {
+    setSyncedQuery(initialQuery);
+    if (initialQuery) setInput(initialQuery);
+  }
 
   useEffect(() => {
     if (isOpen) {
@@ -69,7 +69,7 @@ export const CloudShellDrawer: React.FC<CloudShellDrawerProps> = ({
 
     const time = new Date().toLocaleTimeString('pt-BR');
     let out = '';
-    let isErr = false;
+    const isErr = false;
 
     const lower = cmd.toLowerCase();
 

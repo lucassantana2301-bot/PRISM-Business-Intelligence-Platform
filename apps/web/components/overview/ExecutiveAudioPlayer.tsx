@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Play, Pause, Volume2, Sparkles, RotateCcw, FastForward } from 'lucide-react';
 import { OverviewDashboardData } from '@/lib/api/analytics';
 import { formatCurrency, formatPercentage } from '@/lib/utils/formatters';
@@ -13,20 +13,18 @@ interface ExecutiveAudioPlayerProps {
 export const ExecutiveAudioPlayer: React.FC<ExecutiveAudioPlayerProps> = ({ data, periodLabel }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [rate, setRate] = useState<number>(1.0);
-  const [transcript, setTranscript] = useState<string>('');
   const speechRef = useRef<SpeechSynthesisUtterance | null>(null);
 
   // Generate speech script based on live dashboard state
-  useEffect(() => {
-    if (!data) return;
+  const transcript = useMemo(() => {
+    if (!data) return '';
     const gross = data.kpis.gross_revenue?.current_value ?? 0;
     const orders = data.kpis.orders?.current_value ?? 0;
     const conv = data.kpis.conversion_rate?.current_value ?? 0;
     const topCat = data.categories[0]?.name ?? 'Eletrônicos';
 
-    const script = `Relatório Executivo PRISM para o período de ${periodLabel}. O faturamento bruto consolidado atingiu ${formatCurrency(gross)}, com um total de ${orders} pedidos concluídos e taxa média de conversão em ${formatPercentage(conv)}. A categoria líder em participação de receita foi ${topCat}. Todos os modelos operam dentro dos limites de conformidade e integridade DuckDB.`;
+    return `Relatório Executivo PRISM para o período de ${periodLabel}. O faturamento bruto consolidado atingiu ${formatCurrency(gross)}, com um total de ${orders} pedidos concluídos e taxa média de conversão em ${formatPercentage(conv)}. A categoria líder em participação de receita foi ${topCat}. Todos os modelos operam dentro dos limites de conformidade e integridade DuckDB.`;
 
-    setTranscript(script);
   }, [data, periodLabel]);
 
   // Clean up speech on unmount

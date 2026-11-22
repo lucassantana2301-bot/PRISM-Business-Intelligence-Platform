@@ -49,40 +49,40 @@ const Instrument: React.FC<InstrumentProps> = ({
       : 'bg-prism-cyan';
 
   return (
-    <div className="relative flex flex-col justify-between p-5 rounded-xl border border-slate-100 bg-[#fbfcfd] hover:bg-white transition-all duration-150 group">
+    <div className="relative flex flex-col justify-between p-5 rounded-xl border border-slate-200/80 bg-gradient-to-b from-white to-slate-50/60 hover:from-white hover:to-indigo-50/20 hover:border-indigo-200/80 transition-all duration-300 group shadow-2xs hover:shadow-md hover-lift">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <span className={clsx('h-2 w-2 rounded-full', accentColor)} />
+          <span className={clsx('h-2 w-2 rounded-full ring-2 ring-white shadow-xs', accentColor)} />
           <AnalyticalCoordinate dimension={dimension}>{coordinate}</AnalyticalCoordinate>
         </div>
         {delta != null && (
           <span
             className={clsx(
-              'inline-flex items-center gap-0.5 font-mono text-[11px] font-semibold px-2 py-0.5 rounded tabular-nums',
-              favorable === true && 'bg-emerald-50 text-emerald-700 border border-emerald-200/60',
-              favorable === false && 'bg-rose-50 text-rose-700 border border-rose-200/60',
-              favorable == null && 'bg-slate-50 text-slate-600 border border-slate-200/60'
+              'inline-flex items-center gap-0.5 font-mono text-[11px] font-bold px-2.5 py-0.5 rounded-full tabular-nums shadow-2xs transition-transform group-hover:scale-105',
+              favorable === true && 'bg-emerald-50 text-emerald-700 border border-emerald-200',
+              favorable === false && 'bg-rose-50 text-rose-700 border border-rose-200',
+              favorable == null && 'bg-slate-50 text-slate-600 border border-slate-200'
             )}
           >
-            {favorable === true && <ArrowUpRight className="h-3 w-3" />}
-            {favorable === false && <ArrowDownRight className="h-3 w-3" />}
+            {favorable === true && <ArrowUpRight className="h-3 w-3 text-emerald-600" />}
+            {favorable === false && <ArrowDownRight className="h-3 w-3 text-rose-600" />}
             {formatDelta(delta)}
           </span>
         )}
       </div>
 
       <div className="mt-4">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">
+        <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500 group-hover:text-slate-700 transition-colors">
           {label}
         </p>
-        <p className="mt-1 text-2xl lg:text-[1.75rem] font-bold tracking-tight text-slate-900 tabular-nums">
+        <p className="mt-1 text-2xl lg:text-[1.75rem] font-extrabold tracking-tight text-slate-900 tabular-nums font-mono">
           {value}
         </p>
       </div>
 
       <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
-        <span>{comparisonLabel}</span>
-        <span className="font-mono text-[10px] text-slate-400">Canônico</span>
+        <span className="font-medium">{comparisonLabel}</span>
+        <span className="font-mono text-[10px] px-1.5 py-0.2 rounded bg-slate-100 text-slate-600 font-semibold">Canônico</span>
       </div>
     </div>
   );

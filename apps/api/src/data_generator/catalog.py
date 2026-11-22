@@ -2,7 +2,7 @@
 PRISM E-Commerce Catalogs, Geographical Weightings & Brazilian Market Distributions
 """
 
-from typing import List, Dict, Tuple, Any
+from typing import Any
 
 # ==================== GEOGRAPHY & DEMOGRAPHICS ====================
 REGIONS_WEIGHTED = [
@@ -13,7 +13,7 @@ REGIONS_WEIGHTED = [
     ("North", 0.04),
 ]
 
-STATES_BY_REGION: Dict[str, List[Tuple[str, str, float]]] = {
+STATES_BY_REGION: dict[str, list[tuple[str, str, float]]] = {
     "Southeast": [
         ("SP", "São Paulo", 0.60),
         ("RJ", "Rio de Janeiro", 0.22),
@@ -68,7 +68,7 @@ LAST_NAMES = [
 EMAIL_DOMAINS = ["gmail.com", "outlook.com", "uol.com.br", "terra.com.br", "yahoo.com.br", "icloud.com"]
 
 # ==================== CATEGORIES & PRODUCT SPECS ====================
-CATEGORY_SPECS: Dict[str, Dict[str, Any]] = {
+CATEGORY_SPECS: dict[str, dict[str, Any]] = {
     "Electronics": {
         "subcategories": ["Smartphones", "Laptops", "Audio & Headphones", "Smart Home", "Accessories"],
         "price_range": (89.0, 3899.0),

@@ -53,9 +53,9 @@ export const ConversionFunnelCard: React.FC<ConversionFunnelCardProps> = ({
         </div>
 
         {isLoading ? (
-          <div className="space-y-3 animate-pulse">
+          <div className="space-y-3 animate-shimmer">
             {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="h-14 bg-slate-100 rounded-xl" />
+              <div key={i} className="h-16 bg-slate-100 rounded-xl" />
             ))}
           </div>
         ) : data.length === 0 ? (
@@ -72,14 +72,16 @@ export const ConversionFunnelCard: React.FC<ConversionFunnelCardProps> = ({
               return (
                 <div
                   key={step.step}
-                  className="group relative p-3.5 rounded-xl border border-slate-100 bg-[#fbfcfd] hover:bg-white hover:border-slate-200 transition-all duration-150"
+                  className="group relative p-4 rounded-xl border border-slate-200/80 bg-gradient-to-r from-white via-slate-50/50 to-white hover:border-indigo-300 transition-all duration-200 hover-lift shadow-2xs"
                 >
-                  <div className="flex items-center justify-between text-xs mb-2">
-                    <div className="flex items-center gap-2">
-                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-100 font-mono text-[10px] font-bold text-slate-700">
+                  <div className="flex items-center justify-between text-xs mb-2.5">
+                    <div className="flex items-center gap-2.5">
+                      <span className="flex h-5.5 w-5.5 items-center justify-center rounded-full bg-indigo-600 text-white font-mono text-[10px] font-bold shadow-xs">
                         {idx + 1}
                       </span>
-                      <span className="font-semibold text-slate-800">{stepLabel}</span>
+                      <span className="font-bold text-slate-800 text-sm group-hover:text-indigo-900 transition-colors">
+                        {stepLabel}
+                      </span>
                     </div>
 
                     <div className="flex items-center gap-4 font-mono text-xs tabular-nums">
@@ -87,30 +89,30 @@ export const ConversionFunnelCard: React.FC<ConversionFunnelCardProps> = ({
                         {formatInteger(step.count)}{' '}
                         <span className="text-[10px] font-normal text-slate-400">sessões</span>
                       </span>
-                      <span className="font-bold text-prism-indigo w-14 text-right">
+                      <span className="font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100">
                         {step.conversion}
                       </span>
                       <span
                         className={clsx(
-                          'text-[11px] font-medium w-16 text-right px-1.5 py-0.5 rounded',
+                          'text-[11px] font-bold px-2 py-0.5 rounded border shadow-2xs',
                           step.drop === '0.0%'
-                            ? 'text-slate-400 bg-slate-50'
-                            : 'text-rose-700 bg-rose-50 border border-rose-100'
+                            ? 'text-slate-400 bg-slate-50 border-slate-200'
+                            : 'text-rose-700 bg-rose-50 border-rose-200'
                         )}
                       >
-                        {step.drop === '0.0%' ? 'Baseline' : step.drop}
+                        {step.drop === '0.0%' ? 'Baseline' : `-${step.drop}`}
                       </span>
                     </div>
                   </div>
 
-                  {/* Progress Sankey Bar */}
-                  <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100 p-0.5">
+                  {/* Progress Bar with Gradient */}
+                  <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100 p-0.5 shadow-inner">
                     <div
                       className={clsx(
                         'h-full rounded-full bg-gradient-to-r transition-all duration-500 ease-out',
-                        stepColors[idx] || 'from-indigo-600 to-indigo-400'
+                        stepColors[idx] ?? 'from-indigo-600 to-cyan-500'
                       )}
-                      style={{ width: `${Math.max(convVal, 2)}%` }}
+                      style={{ width: `${Math.min(convVal, 100)}%` }}
                     />
                   </div>
                 </div>

@@ -25,12 +25,13 @@ export interface SidebarProps {
 }
 
 const navigation = [
-  { coordinate: '01', label: 'Visão Geral', detail: 'Executive Cockpit', href: '/dashboard', icon: TrendingUp },
+  { coordinate: '01', label: 'Visão Geral', detail: 'Executive Cockpit', href: '/', icon: TrendingUp },
   { coordinate: '02', label: 'Análises Dimensionais', detail: 'Channels & ROAS', href: '/analytics', icon: BarChart3 },
   { coordinate: '03', label: 'Explorador Canônico', detail: '369k+ Raw Mart', href: '/explorer', icon: Database },
   { coordinate: '04', label: 'Radar de Anomalias', detail: 'Proactive Insights', href: '/insights', icon: Sparkles },
   { coordinate: '05', label: 'Pergunte ao PRISM', detail: 'Semantic Refraction', href: '/ask', icon: MessageSquareCode },
   { coordinate: '06', label: 'Fontes & Telemetria', detail: 'DuckDB Engine', href: '/sources', icon: Layers },
+  { coordinate: '07', label: 'Apresentação 3D', detail: 'Cinematic Story', href: '/experience', icon: Activity },
 ];
 
 export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggleCollapse, onMobileClose }) => {
@@ -58,7 +59,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggleCollapse, o
                 <span className="font-extrabold tracking-[0.2em] text-sm text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-100 to-slate-300 notranslate" translate="no">
                   PRISM
                 </span>
-                <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-500/40 text-cyan-300 font-bold tracking-wider shadow-[0_0_8px_rgba(6,182,212,0.25)]">
+                <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-500/25 text-cyan-300 font-bold tracking-wider">
                   v2.4
                 </span>
               </div>
@@ -88,7 +89,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggleCollapse, o
               <p className="font-mono text-[9px] font-bold uppercase tracking-[0.22em] text-slate-400">
                 Instrumentos Analíticos
               </p>
-              <span className="flex h-1.5 w-1.5 rounded-full bg-cyan-400 animate-ping" />
+              <span className="flex h-1.5 w-1.5 rounded-full bg-cyan-400" />
             </div>
           )}
           <div className="space-y-1.5">
@@ -105,10 +106,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggleCollapse, o
                   title={collapsed ? `${item.label} (${item.coordinate})` : undefined}
                   aria-current={active ? 'page' : undefined}
                   className={clsx(
-                    'group relative flex min-h-[2.85rem] items-center gap-3.5 rounded-xl px-3 text-[13px] font-medium transition-all duration-200',
+                    'group relative flex min-h-[3.25rem] items-center gap-3.5 rounded-xl px-3 text-[13px] font-medium transition-colors duration-150',
                     collapsed ? 'justify-center' : '',
                     active
-                      ? 'bg-gradient-to-r from-indigo-500/25 via-indigo-500/10 to-transparent border-l-2 border-cyan-400 text-white shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1),0_0_16px_rgba(6,182,212,0.15)]'
+                      ? 'bg-indigo-400/10 border-l-2 border-cyan-400 text-white'
                       : 'border-l-2 border-transparent text-slate-400 hover:bg-white/[0.06] hover:text-slate-100'
                   )}
                 >
@@ -127,8 +128,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggleCollapse, o
                   {/* Icon */}
                   <Icon
                     className={clsx(
-                      'h-4 w-4 shrink-0 transition-transform duration-200 group-hover:scale-110',
-                      active ? 'text-cyan-400 drop-shadow-[0_0_6px_rgba(6,182,212,0.6)]' : 'text-slate-400 group-hover:text-slate-200'
+                      'h-4 w-4 shrink-0 transition-colors duration-150',
+                      active ? 'text-cyan-400' : 'text-slate-400 group-hover:text-slate-200'
                     )}
                     strokeWidth={active ? 2 : 1.75}
                   />
@@ -145,7 +146,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onToggleCollapse, o
 
                   {/* Active Indicator Pulse */}
                   {active && !collapsed && (
-                    <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 shadow-[0_0_6px_#38bdf8]" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-cyan-400" />
                   )}
                 </Link>
               );

@@ -2,28 +2,28 @@
 PRISM Deterministic E-Commerce Synthetic Dataset Generator Core
 """
 
-import os
 import csv
 import json
+import os
 import random
-from datetime import datetime, date, timedelta
-from typing import List, Dict, Any, Tuple, Optional
+from datetime import datetime, timedelta
+from typing import Any
 
-from .domain import Customer, Product, Order, OrderItem, Session, Campaign
 from .catalog import (
-    REGIONS_WEIGHTED,
-    STATES_BY_REGION,
-    CUSTOMER_SEGMENTS_WEIGHTED,
-    FIRST_NAMES,
-    LAST_NAMES,
-    EMAIL_DOMAINS,
+    BROWSERS_BY_DEVICE,
     CATEGORY_SPECS,
     CHANNELS_WEIGHTED,
-    PAYMENT_METHODS_WEIGHTED,
+    CUSTOMER_SEGMENTS_WEIGHTED,
     DEVICE_TYPES_WEIGHTED,
-    BROWSERS_BY_DEVICE,
+    EMAIL_DOMAINS,
+    FIRST_NAMES,
+    LAST_NAMES,
+    PAYMENT_METHODS_WEIGHTED,
+    REGIONS_WEIGHTED,
+    STATES_BY_REGION,
 )
-from .seasonality import get_seasonal_multiplier, evaluate_active_anomalies, INTENTIONAL_ANOMALIES
+from .domain import Campaign, Customer, Order, OrderItem, Product, Session
+from .seasonality import INTENTIONAL_ANOMALIES, evaluate_active_anomalies, get_seasonal_multiplier
 
 
 class DatasetGenerator:
@@ -44,18 +44,18 @@ class DatasetGenerator:
         # Initialize PRNG with deterministic seed
         self.rng = random.Random(seed)
 
-        self.customers: List[Customer] = []
-        self.products: List[Product] = []
-        self.campaigns: List[Campaign] = []
-        self.orders: List[Order] = []
-        self.order_items: List[OrderItem] = []
-        self.sessions: List[Session] = []
+        self.customers: list[Customer] = []
+        self.products: list[Product] = []
+        self.campaigns: list[Campaign] = []
+        self.orders: list[Order] = []
+        self.order_items: list[OrderItem] = []
+        self.sessions: list[Session] = []
 
-    def _weighted_choice(self, choices: List[Tuple[Any, float]]) -> Any:
-        items, weights = zip(*choices)
+    def _weighted_choice(self, choices: list[tuple[Any, float]]) -> Any:
+        items, weights = zip(*choices, strict=True)
         return self.rng.choices(items, weights=weights, k=1)[0]
 
-    def generate_products(self) -> List[Product]:
+    def generate_products(self) -> list[Product]:
         """Generates realistic product catalog across all categories."""
         products = []
         sku_counter = 1000
@@ -99,7 +99,7 @@ class DatasetGenerator:
         self.products = products
         return products
 
-    def generate_customers(self) -> List[Customer]:
+    def generate_customers(self) -> list[Customer]:
         """Generates customer identities with synthetic geographic distributions."""
         customers = []
         total_days = (self.end_date - self.start_date).days
@@ -143,7 +143,7 @@ class DatasetGenerator:
         self.customers = customers
         return customers
 
-    def generate_campaigns(self) -> List[Campaign]:
+    def generate_campaigns(self) -> list[Campaign]:
         """Generates marketing campaigns with structured time windows."""
         campaigns_def = [
             ("CAMP-01", "Winter Clearance Sale", "Paid Search (Google)", "Seasonal Sale", 28000.0, 27450.0, "Fashion & Apparel", "2025-06-01", "2025-06-30"),
@@ -180,7 +180,7 @@ class DatasetGenerator:
         self.campaigns = campaigns
         return campaigns
 
-    def generate_sessions_and_orders(self) -> Tuple[List[Session], List[Order], List[OrderItem]]:
+    def generate_sessions_and_orders(self) -> tuple[list[Session], list[Order], list[OrderItem]]:
         """
         Simulates end-to-end user traffic, conversion funnels, and orders across each day.
         """
@@ -196,7 +196,7 @@ class DatasetGenerator:
         total_days = (self.end_date - self.start_date).days + 1
 
         # Track registered customers available up to current date
-        active_customer_pool: List[Customer] = []
+        active_customer_pool: list[Customer] = []
         cust_iter = iter(sorted(self.customers, key=lambda c: c.created_at))
         next_cust = next(cust_iter, None)
 
@@ -285,7 +285,7 @@ class DatasetGenerator:
 
                     is_converted = self.rng.random() < base_completion_rate
 
-                order_id: Optional[str] = None
+                order_id: str | None = None
 
                 # If session successfully converted, generate order & items
                 if is_converted:

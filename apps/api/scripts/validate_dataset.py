@@ -3,17 +3,16 @@
 PRISM E-Commerce Dataset Quality & Referential Integrity Validator
 """
 
-import os
 import csv
 import json
+import os
 import sys
-from pathlib import Path
 
 
 def load_csv_rows(filepath: str):
     if not os.path.exists(filepath):
         raise FileNotFoundError(f"Missing dataset file: {filepath}")
-    with open(filepath, "r", encoding="utf-8") as f:
+    with open(filepath, encoding="utf-8") as f:
         reader = csv.DictReader(f)
         return list(reader)
 
@@ -24,7 +23,6 @@ def validate_dataset(data_dir: str = "data/generated/csv", metadata_dir: str = "
     print("==================================================")
 
     errors = []
-    warnings = []
 
     # 1. Load Datasets
     print("Loading CSV datasets...")
@@ -101,7 +99,7 @@ def validate_dataset(data_dir: str = "data/generated/csv", metadata_dir: str = "
         disc = float(o["discount_amount"])
         tax = float(o["tax_amount"])
         ship = float(o["shipping_amount"])
-        if rev < 0 or sub < 0 or disc < 0:
+        if rev < 0 or sub < 0 or disc < 0 or tax < 0 or ship < 0:
             errors.append(f"Negative monetary value in order {o['order_id']}")
 
     for p in products:
@@ -120,7 +118,7 @@ def validate_dataset(data_dir: str = "data/generated/csv", metadata_dir: str = "
     if not os.path.exists(events_file):
         errors.append(f"Missing business events metadata file: {events_file}")
     else:
-        with open(events_file, "r", encoding="utf-8") as f:
+        with open(events_file, encoding="utf-8") as f:
             events_data = json.load(f)
             events = events_data.get("events", [])
             if len(events) < 5:

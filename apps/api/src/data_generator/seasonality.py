@@ -2,11 +2,11 @@
 PRISM Seasonality Engine, Funnel Modeling & Ground-Truth Business Anomaly Injector
 """
 
-from datetime import datetime, date
-from typing import Dict, Any, Tuple, Optional, List
+from datetime import date
+from typing import Any
 
 # ==================== INTENTIONAL ANOMALY DEFINITIONS ====================
-INTENTIONAL_ANOMALIES: List[Dict[str, Any]] = [
+INTENTIONAL_ANOMALIES: list[dict[str, Any]] = [
     {
         "event_id": "EVENT-01",
         "name": "Mobile iOS Gateway Conversion Degradation",
@@ -142,12 +142,12 @@ def get_seasonal_multiplier(d: date) -> float:
     return dow_mult * month_mult * event_mult
 
 
-def evaluate_active_anomalies(d: date) -> Dict[str, Any]:
+def evaluate_active_anomalies(d: date) -> dict[str, Any]:
     """
     Checks if current date falls within any intentional anomaly windows and returns modifiers.
     """
     d_str = d.strftime("%Y-%m-%d")
-    active_modifiers: Dict[str, Any] = {
+    active_modifiers: dict[str, Any] = {
         "mobile_ios_checkout_penalty": 1.0,
         "electronics_se_surge": 1.0,
         "paid_social_beauty_traffic_boost": 1.0,

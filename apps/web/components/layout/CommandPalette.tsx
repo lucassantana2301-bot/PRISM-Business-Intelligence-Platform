@@ -78,10 +78,6 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
   );
 
   useEffect(() => {
-    setSelectedIndex(0);
-  }, [query]);
-
-  useEffect(() => {
     if (!isOpen) return;
     returnFocusRef.current = document.activeElement as HTMLElement;
     return () => returnFocusRef.current?.focus();
@@ -165,7 +161,10 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
             <input
               autoFocus
               value={query}
-              onChange={(event) => setQuery(event.target.value)}
+              onChange={(event) => {
+                setQuery(event.target.value);
+                setSelectedIndex(0);
+              }}
               placeholder="Digite um comando, navegue ou faça uma pergunta analítica…"
               className="min-w-0 flex-1 bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400"
               aria-label="Pergunta ou comando"

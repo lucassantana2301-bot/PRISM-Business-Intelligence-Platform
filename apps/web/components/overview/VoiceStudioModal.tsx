@@ -192,7 +192,8 @@ export const VoiceStudioModal: React.FC<VoiceStudioModalProps> = ({
                   : 'bg-slate-700 h-2'
               )}
               style={{
-                height: isListening || isSpeaking ? `${Math.max(8, Math.sin((i + Date.now() / 200)) * 40 + 30)}px` : '6px',
+                // Alturas determinísticas por barra; o movimento vem da animação CSS (render puro).
+                height: isListening || isSpeaking ? `${Math.round(Math.max(8, Math.sin(i * 0.9) * 22 + 30))}px` : '6px',
                 animationDelay: `${i * 40}ms`,
               }}
             />

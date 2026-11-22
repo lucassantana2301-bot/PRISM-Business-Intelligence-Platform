@@ -4,8 +4,8 @@ Tests DuckDB table registration, single and multi-metric aggregation,
 comparison variance calculations, time grains, and breakdowns.
 """
 
-import sys
 import os
+import sys
 import time
 
 # Ensure src is in sys.path
@@ -14,14 +14,11 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 from src.analytics.engine import AnalyticsEngine
 from src.analytics.query_spec import (
     AnalyticsQuery,
-    TimeGrain,
     ComparisonWindow,
-    AnalyticsFilter,
-    FilterOperator,
     OrderByClause,
     SortDirection,
+    TimeGrain,
 )
-from src.analytics.metrics import CANONICAL_METRIC_REGISTRY
 
 
 def run_tests():

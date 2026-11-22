@@ -3,7 +3,6 @@ PRISM Data Explorer — Controlled Schema & Dataset Registry
 Defines allowlisted datasets, column metadata, data types, filterability, and sorting permissions.
 """
 
-from typing import Dict, List, Optional
 from pydantic import BaseModel, Field
 
 
@@ -25,12 +24,12 @@ class DatasetMetadata(BaseModel):
     description: str
     table_name: str
     primary_key: str
-    default_columns: List[str]
-    columns: List[ColumnMetadata]
+    default_columns: list[str]
+    columns: list[ColumnMetadata]
 
 
 # ==================== CANONICAL DATASET REGISTRY ====================
-DATASET_REGISTRY: Dict[str, DatasetMetadata] = {
+DATASET_REGISTRY: dict[str, DatasetMetadata] = {
     # 1. Orders
     "orders": DatasetMetadata(
         dataset_id="orders",

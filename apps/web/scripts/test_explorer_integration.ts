@@ -81,8 +81,11 @@ async function runExplorerIntegrationTests() {
     filters: [{ column: 'status', operator: 'eq', value: 'Completed' }],
   });
   console.log(`   - Orders (status = 'Completed'): ${filterCompleted.total_rows.toLocaleString()} rows`);
-  if (filterCompleted.total_rows !== 14982) {
-    throw new Error(`Expected 14,982 completed orders, got ${filterCompleted.total_rows}`);
+  // Valor esperado contado direto no CSV (fonte da verdade), sem número mágico que depende do gerador.
+  const ordersCsv = fs.readFileSync(path.resolve(__dirname, '../../../data/generated/csv/orders.csv'), 'utf-8');
+  const expectedCompleted = ordersCsv.split('\n').filter((line) => line.split(',')[3] === '"Completed"').length;
+  if (expectedCompleted === 0 || filterCompleted.total_rows !== expectedCompleted) {
+    throw new Error(`Expected ${expectedCompleted} completed orders, got ${filterCompleted.total_rows}`);
   }
 
   // Filter 2: Products with category = 'Electronics' AND base_price > 500

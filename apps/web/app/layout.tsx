@@ -16,13 +16,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="pt-BR" className="dark" suppressHydrationWarning>
+    <html lang="pt-BR" className="bg-[#f8f9fc] text-slate-900" suppressHydrationWarning>
       <head>
         <meta name="google" content="notranslate" />
       </head>
       <body
         suppressHydrationWarning
-        className="min-h-screen bg-prism-bg-canvas text-prism-text-primary antialiased selection:bg-prism-accent-blue/30 selection:text-white"
+        className="min-h-screen bg-[#f8f9fc] text-slate-900 antialiased selection:bg-indigo-500/20 selection:text-indigo-900"
       >
         <AppShell>
           {children}

@@ -4,7 +4,8 @@ Authoritative Pydantic models for structured dataset queries, pagination, sortin
 """
 
 from enum import Enum
-from typing import Dict, List, Optional, Any, Union
+from typing import Any
+
 from pydantic import BaseModel, Field
 
 
@@ -24,7 +25,7 @@ class ExplorerFilterOperator(str, Enum):
 class ExplorerFilter(BaseModel):
     column: str
     operator: ExplorerFilterOperator = ExplorerFilterOperator.EQ
-    value: Union[str, int, float, bool, List[Union[str, int, float, bool]]]
+    value: str | int | float | bool | list[str | int | float | bool]
 
 
 class SortDirection(str, Enum):
@@ -34,18 +35,18 @@ class SortDirection(str, Enum):
 
 class ExplorerQuery(BaseModel):
     dataset: str = Field(..., description="Allowlisted dataset identifier (orders, products, etc.)")
-    columns: Optional[List[str]] = Field(default=None, description="Subset of columns to project")
-    search: Optional[str] = Field(default=None, description="Controlled text search on searchable columns")
-    filters: Optional[List[ExplorerFilter]] = Field(default_factory=list, description="Structured filters")
-    sort_by: Optional[str] = Field(default=None, description="Sort column identifier")
-    sort_direction: Optional[SortDirection] = Field(default=SortDirection.DESC, description="Sort direction")
+    columns: list[str] | None = Field(default=None, description="Subset of columns to project")
+    search: str | None = Field(default=None, description="Controlled text search on searchable columns")
+    filters: list[ExplorerFilter] | None = Field(default_factory=list, description="Structured filters")
+    sort_by: str | None = Field(default=None, description="Sort column identifier")
+    sort_direction: SortDirection | None = Field(default=SortDirection.DESC, description="Sort direction")
     page: int = Field(default=1, ge=1, description="1-indexed page number")
     page_size: int = Field(default=25, ge=1, le=100, description="Page size (25, 50, 100)")
 
 
 class ExplorerQueryResult(BaseModel):
     dataset: str
-    rows: List[Dict[str, Any]]
+    rows: list[dict[str, Any]]
     page: int
     page_size: int
     total_rows: int
@@ -55,9 +56,9 @@ class ExplorerQueryResult(BaseModel):
 
 class ExplorerExportQuery(BaseModel):
     dataset: str
-    columns: Optional[List[str]] = None
-    search: Optional[str] = None
-    filters: Optional[List[ExplorerFilter]] = None
-    sort_by: Optional[str] = None
-    sort_direction: Optional[SortDirection] = SortDirection.DESC
+    columns: list[str] | None = None
+    search: str | None = None
+    filters: list[ExplorerFilter] | None = None
+    sort_by: str | None = None
+    sort_direction: SortDirection | None = SortDirection.DESC
     limit: int = Field(default=5000, ge=1, le=5000, description="Max rows for safe CSV export")

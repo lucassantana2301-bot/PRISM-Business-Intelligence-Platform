@@ -6,10 +6,9 @@ mutation, filesystem, multiple statement, and PRAGMA execution attempts.
 """
 
 import re
-from typing import Set, List, Optional
 
 # Allowlisted Tables in PRISM Analytical Schema
-ALLOWLISTED_TABLES: Set[str] = {
+ALLOWLISTED_TABLES: set[str] = {
     "orders",
     "order_items",
     "products",
@@ -31,7 +30,7 @@ ALLOWLISTED_TABLES: Set[str] = {
 }
 
 # Forbidden SQL Keywords & Functions
-FORBIDDEN_KEYWORDS: Set[str] = {
+FORBIDDEN_KEYWORDS: set[str] = {
     "INSERT",
     "UPDATE",
     "DELETE",
@@ -62,6 +61,19 @@ FORBIDDEN_KEYWORDS: Set[str] = {
     "SYSTEM",
     "SHELL",
 }
+
+
+# Nós de AST proibidos, pelo nome da classe no sqlglot. A lista é resolvida em tempo de execução
+# porque o sqlglot renomeia classes entre versões (ex.: AlterTable virou Alter na 26+); referenciar
+# uma classe inexistente quebrava toda validação com AttributeError.
+_DISALLOWED_NODE_NAMES = (
+    "Insert", "Update", "Delete", "Drop", "Alter", "AlterTable", "Create", "Command", "Merge",
+    "TruncateTable", "Copy", "Grant", "Pragma", "Attach", "Detach", "Set", "Use", "Install", "Export",
+)
+
+
+def _disallowed_node_types(exp_module: object) -> tuple[type, ...]:
+    return tuple(getattr(exp_module, name) for name in _DISALLOWED_NODE_NAMES if hasattr(exp_module, name))
 
 
 class SQLValidationError(Exception):
@@ -112,13 +124,15 @@ def validate_sql_query(sql: str) -> bool:
         if len(parsed_trees) > 1:
             raise SQLValidationError("Multiple AST query trees detected.")
 
-        ast = parsed_trees[0]
-        if not isinstance(ast, (exp.Select, exp.Expression)):
+        ast = parsed_trees[0] if parsed_trees else None
+        # Raiz precisa ser uma consulta (SELECT, UNION/INTERSECT/EXCEPT ou subconsulta).
+        # Antes a checagem aceitava qualquer exp.Expression, ou seja, qualquer comando.
+        if ast is None or not isinstance(ast, exp.Query):
             raise SQLValidationError("AST root is not a valid analytical SELECT expression.")
 
-        # Check for non-select AST expressions
+        disallowed = _disallowed_node_types(exp)
         for node in ast.walk():
-            if isinstance(node, (exp.Insert, exp.Update, exp.Delete, exp.Drop, exp.AlterTable, exp.Create, exp.Command)):
+            if isinstance(node, disallowed):
                 raise SQLValidationError(f"Disallowed AST operation '{type(node).__name__}' detected.")
 
     except ImportError:
@@ -128,6 +142,6 @@ def validate_sql_query(sql: str) -> bool:
         if isinstance(e, SQLValidationError):
             raise e
         # If sqlglot raises a parse error on invalid sql
-        raise SQLValidationError(f"SQL syntax parse error: {str(e)}")
+        raise SQLValidationError(f"SQL syntax parse error: {str(e)}") from e
 
     return True

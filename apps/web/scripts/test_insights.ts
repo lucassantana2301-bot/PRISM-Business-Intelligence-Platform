@@ -80,7 +80,7 @@ async function runInsightsSuite() {
     path.resolve(process.cwd(), 'apps/api/src/contracts'),
   ];
 
-  let leakedFiles: string[] = [];
+  const leakedFiles: string[] = [];
 
   function scanDir(dir: string) {
     if (!fs.existsSync(dir)) return;

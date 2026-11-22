@@ -27,10 +27,9 @@ export const BoardroomModeModal: React.FC<BoardroomModeModalProps> = ({
   onClose,
   data,
 }) => {
-  const [time, setTime] = useState('');
+  const [time, setTime] = useState(() => new Date().toLocaleTimeString('pt-BR'));
 
   useEffect(() => {
-    setTime(new Date().toLocaleTimeString('pt-BR'));
     const interval = setInterval(() => {
       setTime(new Date().toLocaleTimeString('pt-BR'));
     }, 1000);

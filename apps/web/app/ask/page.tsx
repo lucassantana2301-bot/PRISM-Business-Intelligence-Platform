@@ -7,7 +7,14 @@ export const metadata = {
   description: 'Motor conversacional de inteligência e refração semântica com decomposição de intenção, validação AST e síntese analítica.',
 };
 
-export default function AskPrismPage() {
+type AskPrismPageProps = {
+  searchParams: Promise<{ q?: string | string[] }>;
+};
+
+export default async function AskPrismPage({ searchParams }: AskPrismPageProps) {
+  const { q } = await searchParams;
+  // Limite defensivo: o valor vem da URL e só pré-preenche o campo.
+  const initialQuestion = typeof q === 'string' ? q.slice(0, 500) : '';
   return (
     <div className="space-y-8 pb-16">
       <PageHeader
@@ -24,7 +31,7 @@ export default function AskPrismPage() {
         }
       />
 
-      <AskPrismClient />
+      <AskPrismClient initialQuestion={initialQuestion} />
     </div>
   );
 }

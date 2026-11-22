@@ -4,7 +4,7 @@ Authoritative definitions, source entities, formulas, and supported dimensions.
 """
 
 from enum import Enum
-from typing import Dict, List, Optional, Any
+
 from pydantic import BaseModel, Field
 
 
@@ -22,17 +22,17 @@ class MetricDefinition(BaseModel):
     description: str
     category: MetricCategory
     formula_sql: str
-    source_entities: List[str]
+    source_entities: list[str]
     aggregation_type: str = Field(description="sum, count, ratio, avg, count_distinct")
-    supported_dimensions: List[str]
-    supported_grains: List[str] = ["day", "week", "month", "quarter", "year"]
+    supported_dimensions: list[str]
+    supported_grains: list[str] = ["day", "week", "month", "quarter", "year"]
     format_type: str = Field(description="currency, integer, percentage, ratio, decimal")
     is_favorable_up: bool = True
     safe_zero_denominator: bool = True
 
 
 # ==================== CANONICAL METRIC REGISTRY ====================
-CANONICAL_METRIC_REGISTRY: Dict[str, MetricDefinition] = {
+CANONICAL_METRIC_REGISTRY: dict[str, MetricDefinition] = {
     # 1. Gross Revenue
     "gross_revenue": MetricDefinition(
         metric_id="gross_revenue",
