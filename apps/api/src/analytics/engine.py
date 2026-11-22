@@ -4,28 +4,28 @@ DuckDB-powered analytical execution layer with canonical metric compilation,
 dimensional breakdowns, time-grain aggregation, AST SQL validation, and comparison variance analysis.
 """
 
-import time
 import os
 import re
-from datetime import datetime, date, timedelta
-from typing import Dict, List, Optional, Any, Tuple, Set
+import time
+from datetime import datetime, timedelta
+from typing import Any
+
 import duckdb
 
-from .metrics import CANONICAL_METRIC_REGISTRY, MetricDefinition
+from ..security.query_validator import validate_sql_query
+from .metrics import CANONICAL_METRIC_REGISTRY
 from .query_spec import (
+    AnalyticsFilter,
     AnalyticsQuery,
     AnalyticsQueryResult,
-    MetricSummaryValue,
-    TimeGrain,
     ComparisonWindow,
     FilterOperator,
-    AnalyticsFilter,
+    MetricSummaryValue,
+    TimeGrain,
 )
-from ..security.query_validator import validate_sql_query, SQLValidationError
-
 
 # Strict Allowlists for Semantic Layer Security
-ALLOWED_DIMENSIONS: Set[str] = {
+ALLOWED_DIMENSIONS: set[str] = {
     "date",
     "customer_segment",
     "category",
@@ -40,14 +40,28 @@ ALLOWED_DIMENSIONS: Set[str] = {
     "campaign_name",
 }
 
-ALLOWED_GRAINS: Set[str] = {"day", "week", "month", "quarter", "year"}
-ALLOWED_COMPARISONS: Set[str] = {"none", "previous_period", "previous_year", "custom"}
-ALLOWED_OPERATORS: Set[str] = {"eq", "neq", "in", "not_in", "gt", "gte", "lt", "lte", "between"}
-ALLOWED_TABLE_ALIASES: Set[str] = {"", "o", "oi", "p", "c", "s", "first_orders", "current_orders", "prior_orders"}
+ALLOWED_GRAINS: set[str] = {"day", "week", "month", "quarter", "year"}
+ALLOWED_COMPARISONS: set[str] = {"none", "previous_period", "previous_year", "custom"}
+ALLOWED_OPERATORS: set[str] = {"eq", "neq", "in", "not_in", "gt", "gte", "lt", "lte", "between"}
+ALLOWED_TABLE_ALIASES: set[str] = {"", "o", "oi", "p", "c", "s", "first_orders", "current_orders", "prior_orders"}
+
+# Métricas calculadas sobre a tabela de sessões (as demais vêm de pedidos/itens).
+SESSION_METRICS: set[str] = {"sessions", "conversion_rate", "cart_abandonment_rate"}
+# Métricas cujas fórmulas dependem de subconsultas próprias e ainda não suportam agrupamento.
+UNGROUPABLE_METRICS: set[str] = {"new_customers", "returning_customers", "revenue_per_session", "roas"}
+# Dimensões presentes tanto em pedidos (via clientes) quanto em sessões.
+SESSION_JOINABLE_DIMENSIONS: set[str] = {"customer_segment", "region", "state"}
+GRAIN_TRUNC_UNITS: dict[TimeGrain, str] = {
+    TimeGrain.DAY: "day",
+    TimeGrain.WEEK: "week",
+    TimeGrain.MONTH: "month",
+    TimeGrain.QUARTER: "quarter",
+    TimeGrain.YEAR: "year",
+}
 
 
 class AnalyticsEngine:
-    def __init__(self, data_dir: Optional[str] = None, db_path: str = ":memory:"):
+    def __init__(self, data_dir: str | None = None, db_path: str = ":memory:"):
         """
         Initialize Analytics Engine with DuckDB.
         Loads CSV files from data_dir into DuckDB views.
@@ -173,14 +187,14 @@ class AnalyticsEngine:
             raise ValueError(f"Invalid date format '{date_str}'. Expected 'YYYY-MM-DD'.")
         try:
             datetime.strptime(date_str, "%Y-%m-%d")
-        except ValueError:
-            raise ValueError(f"Invalid calendar date '{date_str}'.")
+        except ValueError as exc:
+            raise ValueError(f"Invalid calendar date '{date_str}'.") from exc
         return date_str
 
     def _compute_comparison_dates(
         self, start_date: str, end_date: str, comparison: ComparisonWindow,
-        custom_start: Optional[str] = None, custom_end: Optional[str] = None
-    ) -> Optional[Tuple[str, str]]:
+        custom_start: str | None = None, custom_end: str | None = None
+    ) -> tuple[str, str] | None:
         """Calculate comparison window date bounds."""
         if comparison == ComparisonWindow.NONE or not comparison:
             return None
@@ -226,7 +240,7 @@ class AnalyticsEngine:
             escaped = str(val).replace("'", "''")
             return f"'{escaped}'"
 
-    def _build_filter_sql(self, filters: List[AnalyticsFilter], table_alias: str = "") -> str:
+    def _build_filter_sql(self, filters: list[AnalyticsFilter], table_alias: str = "") -> str:
         """Construct parameterized, allowlisted SQL WHERE clause from AnalyticsFilter list."""
         if not filters:
             return ""
@@ -274,7 +288,7 @@ class AnalyticsEngine:
         return " AND " + " AND ".join(clauses) if clauses else ""
 
     def _execute_single_metric_aggregate(
-        self, metric_id: str, start_date: str, end_date: str, filters: List[AnalyticsFilter]
+        self, metric_id: str, start_date: str, end_date: str, filters: list[AnalyticsFilter]
     ) -> float:
         """Calculate a single scalar metric aggregate over a date window."""
         self._validate_date_str(start_date)
@@ -433,6 +447,70 @@ class AnalyticsEngine:
 
         return 0.0
 
+    def _grouped_source_sql(
+        self,
+        source: str,
+        metrics: list[str],
+        time_grain: TimeGrain | None,
+        dimensions: list[str],
+        query: AnalyticsQuery,
+    ) -> str:
+        """SELECT agrupado de uma única fonte (orders ou sessions) com os mesmos aliases de chave."""
+        is_sessions = source == "sessions"
+        select_cols: list[str] = []
+        group_by_cols: list[str] = []
+
+        if time_grain:
+            ts_col = "s.started_at" if is_sessions else "o.created_at"
+            unit = GRAIN_TRUNC_UNITS[time_grain]
+            select_cols.append(f"CAST(DATE_TRUNC('{unit}', {ts_col}) AS VARCHAR) AS timestamp")
+            group_by_cols.append("timestamp")
+
+        for dim in dimensions:
+            if dim in ["category", "subcategory"]:
+                col_expr = f"p.{dim}"
+            elif dim in ["customer_segment", "region", "state"]:
+                col_expr = f"s.{dim}" if is_sessions else f"c.{dim}"
+            elif dim == "campaign_name":
+                col_expr = "camp.name"
+            elif dim == "product_id":
+                col_expr = "oi.product_id"
+            else:
+                col_expr = f"s.{dim}" if is_sessions else f"o.{dim}"
+            select_cols.append(f"{col_expr} AS {dim}")
+            group_by_cols.append(dim)
+
+        select_cols += [f"{CANONICAL_METRIC_REGISTRY[m].formula_sql} AS {m}" for m in metrics]
+        select_clause = ", ".join(select_cols)
+        group_clause = f"GROUP BY {', '.join(group_by_cols)}" if group_by_cols else ""
+
+        if is_sessions:
+            filter_sql = self._build_filter_sql(query.filters or [], "s")
+            return f"""
+                    SELECT {select_clause}
+                    FROM sessions s
+                    WHERE s.started_at >= '{query.start_date} 00:00:00'
+                      AND s.started_at <= '{query.end_date} 23:59:59'
+                      {filter_sql}
+                    {group_clause}
+            """
+
+        filter_sql = self._build_filter_sql(query.filters or [], "")
+        is_campaign_query = "campaign_name" in dimensions
+        campaign_join = "LEFT JOIN campaigns camp ON o.campaign_id = camp.campaign_id" if is_campaign_query else ""
+        return f"""
+                    SELECT {select_clause}
+                    FROM orders o
+                    LEFT JOIN order_items oi ON o.order_id = oi.order_id
+                    LEFT JOIN products p ON oi.product_id = p.product_id
+                    LEFT JOIN customers c ON o.customer_id = c.customer_id
+                    {campaign_join}
+                    WHERE o.created_at >= '{query.start_date} 00:00:00'
+                      AND o.created_at <= '{query.end_date} 23:59:59'
+                      {filter_sql}
+                    {group_clause}
+        """
+
     def execute_query(self, query: AnalyticsQuery) -> AnalyticsQueryResult:
         """
         Execute structured analytical query, calculating metrics summary and breakdown rows.
@@ -463,7 +541,7 @@ class AnalyticsEngine:
             query.custom_comparison_start, query.custom_comparison_end
         )
 
-        metrics_summary: Dict[str, MetricSummaryValue] = {}
+        metrics_summary: dict[str, MetricSummaryValue] = {}
         for m in query.metrics:
             m_def = CANONICAL_METRIC_REGISTRY[m]
             curr_val = self._execute_single_metric_aggregate(m, query.start_date, query.end_date, query.filters or [])
@@ -498,91 +576,54 @@ class AnalyticsEngine:
             )
 
         # 2. Build Multi-dimensional / Time-grain Query Rows
-        rows: List[Dict[str, Any]] = []
+        rows: list[dict[str, Any]] = []
         compiled_sql = None
 
         time_grain = query.time_grain
         dimensions = query.dimensions or []
 
         if time_grain or dimensions:
-            select_cols = []
-            group_by_cols = []
-            order_by_cols = []
+            order_by_cols = ["timestamp ASC"] if time_grain else []
 
-            # Determine primary source table based on metrics and dimensions
-            is_sessions_query = all(m in ["sessions", "conversion_rate", "cart_abandonment_rate"] for m in query.metrics)
-            is_campaign_query = "campaign_name" in dimensions or "roas" in query.metrics
-
-            if time_grain:
-                ts_col = "s.started_at" if is_sessions_query else "o.created_at"
-                if time_grain == TimeGrain.DAY:
-                    grain_expr = f"CAST(DATE_TRUNC('day', {ts_col}) AS VARCHAR)"
-                elif time_grain == TimeGrain.WEEK:
-                    grain_expr = f"CAST(DATE_TRUNC('week', {ts_col}) AS VARCHAR)"
-                elif time_grain == TimeGrain.MONTH:
-                    grain_expr = f"CAST(DATE_TRUNC('month', {ts_col}) AS VARCHAR)"
-                elif time_grain == TimeGrain.QUARTER:
-                    grain_expr = f"CAST(DATE_TRUNC('quarter', {ts_col}) AS VARCHAR)"
-                elif time_grain == TimeGrain.YEAR:
-                    grain_expr = f"CAST(DATE_TRUNC('year', {ts_col}) AS VARCHAR)"
-
-                select_cols.append(f"{grain_expr} AS timestamp")
-                group_by_cols.append("timestamp")
-                order_by_cols.append("timestamp ASC")
-
-            for dim in dimensions:
-                if dim in ["category", "subcategory"]:
-                    col_expr = f"p.{dim}"
-                elif dim in ["customer_segment", "region", "state"]:
-                    col_expr = f"c.{dim}" if not is_sessions_query else f"s.{dim}"
-                elif dim == "campaign_name":
-                    col_expr = "camp.name AS campaign_name"
-                elif dim == "product_id":
-                    col_expr = "oi.product_id"
-                else:
-                    col_expr = f"s.{dim}" if is_sessions_query else f"o.{dim}"
-                select_cols.append(f"{col_expr} AS {dim}")
-                group_by_cols.append(dim)
-
-            metric_selects = []
+            session_metrics = [m for m in query.metrics if m in SESSION_METRICS]
+            order_metrics = [m for m in query.metrics if m not in SESSION_METRICS]
             for m in query.metrics:
-                m_def = CANONICAL_METRIC_REGISTRY[m]
-                metric_selects.append(f"{m_def.formula_sql} AS {m}")
+                if m in UNGROUPABLE_METRICS:
+                    raise ValueError(
+                        f"Metric '{m}' does not support time-grain or dimensional breakdown yet; "
+                        "request it without time_grain/dimensions."
+                    )
 
-            select_clause = ", ".join(select_cols + metric_selects)
-            group_clause = ", ".join(group_by_cols)
-
-            if is_sessions_query:
-                filter_sql = self._build_filter_sql(query.filters or [], "s")
+            if session_metrics and order_metrics:
+                # Pedidos e sessões não compartilham linhas: cada fonte é agregada separadamente e
+                # as duas são unidas pelas chaves de agrupamento (antes o SQL referenciava "s" sem join).
+                incompatible = [d for d in dimensions if d not in SESSION_JOINABLE_DIMENSIONS]
+                if incompatible:
+                    raise ValueError(
+                        f"Dimension(s) {incompatible} cannot combine session metrics with order metrics."
+                    )
+                keys = (["timestamp"] if time_grain else []) + list(dimensions)
+                orders_sql = self._grouped_source_sql("orders", order_metrics, time_grain, dimensions, query)
+                sessions_sql = self._grouped_source_sql("sessions", session_metrics, time_grain, dimensions, query)
+                key_cols = [f"COALESCE(ord.{k}, ses.{k}) AS {k}" for k in keys]
+                metric_cols = [f"ord.{m} AS {m}" for m in order_metrics] + [f"ses.{m} AS {m}" for m in session_metrics]
+                join_on = " AND ".join(f"ord.{k} IS NOT DISTINCT FROM ses.{k}" for k in keys)
                 compiled_sql = f"""
-                    SELECT 
-                        {select_clause}
-                    FROM sessions s
-                    WHERE s.started_at >= '{query.start_date} 00:00:00'
-                      AND s.started_at <= '{query.end_date} 23:59:59'
-                      {filter_sql}
-                    GROUP BY {group_clause}
+                    WITH ord AS ({orders_sql}), ses AS ({sessions_sql})
+                    SELECT {", ".join(key_cols + metric_cols)}
+                    FROM ord FULL OUTER JOIN ses ON {join_on}
                 """
             else:
-                filter_sql = self._build_filter_sql(query.filters or [], "")
-                campaign_join = "LEFT JOIN campaigns camp ON o.campaign_id = camp.campaign_id" if is_campaign_query else ""
-                compiled_sql = f"""
-                    SELECT 
-                        {select_clause}
-                    FROM orders o
-                    LEFT JOIN order_items oi ON o.order_id = oi.order_id
-                    LEFT JOIN products p ON oi.product_id = p.product_id
-                    LEFT JOIN customers c ON o.customer_id = c.customer_id
-                    {campaign_join}
-                    WHERE o.created_at >= '{query.start_date} 00:00:00'
-                      AND o.created_at <= '{query.end_date} 23:59:59'
-                      {filter_sql}
-                    GROUP BY {group_clause}
-                """
+                source = "sessions" if session_metrics else "orders"
+                compiled_sql = self._grouped_source_sql(source, list(query.metrics), time_grain, dimensions, query)
 
             if query.order_by:
+                sortable = set(query.metrics) | set(dimensions) | ({"timestamp"} if time_grain else set())
                 custom_orders = []
                 for o in query.order_by:
+                    # O campo vai direto para o SQL: só aceita colunas projetadas pela própria consulta.
+                    if o.field not in sortable:
+                        raise ValueError(f"Cannot order by '{o.field}': not a selected metric or dimension.")
                     dir_str = "ASC" if o.direction.value == "asc" else "DESC"
                     custom_orders.append(f"{o.field} {dir_str}")
                 compiled_sql += f" ORDER BY {', '.join(custom_orders)}"

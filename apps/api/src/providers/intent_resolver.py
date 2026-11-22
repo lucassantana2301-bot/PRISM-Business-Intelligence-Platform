@@ -7,29 +7,28 @@ synthesis over canonical analytics results.
 
 import re
 import uuid
-from datetime import datetime, date, timedelta
-from typing import Dict, List, Optional, Any, Tuple
+from datetime import datetime
 
-from ..contracts.intent import (
-    SemanticIntent,
-    ConversationContext,
-    VisualizationSpec,
-    VisualizationType,
-    AskPrismRequest,
-    AskPrismResponse,
-)
+from ..analytics.engine import AnalyticsEngine
+from ..analytics.metrics import CANONICAL_METRIC_REGISTRY
 from ..analytics.query_spec import (
+    AnalyticsFilter,
     AnalyticsQuery,
     AnalyticsQueryResult,
-    AnalyticsFilter,
+    ComparisonWindow,
+    FilterOperator,
     OrderByClause,
     SortDirection,
-    FilterOperator,
     TimeGrain,
-    ComparisonWindow,
 )
-from ..analytics.metrics import CANONICAL_METRIC_REGISTRY
-from ..analytics.engine import AnalyticsEngine
+from ..contracts.intent import (
+    AskPrismRequest,
+    AskPrismResponse,
+    ConversationContext,
+    SemanticIntent,
+    VisualizationSpec,
+    VisualizationType,
+)
 
 # Canonical dataset end date baseline
 DEFAULT_END_DATE = "2026-10-31"
@@ -61,7 +60,7 @@ class SemanticIntentResolver:
     Bilingual intent resolver mapping natural language questions to canonical AnalyticsQuery specifications.
     """
 
-    def resolve(self, message: str, context: Optional[ConversationContext] = None) -> SemanticIntent:
+    def resolve(self, message: str, context: ConversationContext | None = None) -> SemanticIntent:
         msg = message.lower().strip()
 
         # 1. Adversarial & Out-of-Domain Guard
@@ -268,7 +267,7 @@ class AskPrismEngine:
     Analytics Execution, Grounded Narration, and Context Management.
     """
 
-    def __init__(self, analytics_engine: Optional[AnalyticsEngine] = None):
+    def __init__(self, analytics_engine: AnalyticsEngine | None = None):
         self.analytics_engine = analytics_engine or AnalyticsEngine()
         self.resolver = SemanticIntentResolver()
 
@@ -370,7 +369,7 @@ class AskPrismEngine:
 
     def _synthesize_grounded_response(
         self, intent: SemanticIntent, query: AnalyticsQuery, result: AnalyticsQueryResult, is_pt: bool
-    ) -> Tuple[str, VisualizationSpec]:
+    ) -> tuple[str, VisualizationSpec]:
         """Synthesize concise grounded narrative and visual specification."""
         first_metric = intent.metrics[0]
         m_summary = result.metrics_summary.get(first_metric)

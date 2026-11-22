@@ -3,9 +3,8 @@
 PRISM E-Commerce Dataset Generator CLI
 """
 
-import sys
-import os
 import argparse
+import sys
 from pathlib import Path
 
 # Add project root and apps/api to path
@@ -13,7 +12,7 @@ script_dir = Path(__file__).resolve().parent
 api_dir = script_dir.parent
 sys.path.insert(0, str(api_dir))
 
-from src.data_generator.generator import DatasetGenerator
+from src.data_generator.generator import DatasetGenerator  # noqa: E402 (depende do sys.path acima)
 
 
 def main():

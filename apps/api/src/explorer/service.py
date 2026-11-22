@@ -4,33 +4,32 @@ DuckDB-powered structured dataset exploration, server-side pagination,
 sorting, multi-operator filtering, text search, and safe CSV export.
 """
 
-import time
-import io
 import csv
-from typing import Dict, List, Optional, Any, Tuple
-import duckdb
+import io
+import time
+from typing import Any
 
-from .registry import DATASET_REGISTRY, DatasetMetadata, ColumnMetadata
+from ..analytics.engine import AnalyticsEngine
 from .query_spec import (
-    ExplorerQuery,
-    ExplorerQueryResult,
+    ExplorerExportQuery,
     ExplorerFilter,
     ExplorerFilterOperator,
-    ExplorerExportQuery,
+    ExplorerQuery,
+    ExplorerQueryResult,
     SortDirection,
 )
-from ..analytics.engine import AnalyticsEngine
+from .registry import DATASET_REGISTRY, ColumnMetadata, DatasetMetadata
 
 
 class ExplorerService:
-    def __init__(self, engine: Optional[AnalyticsEngine] = None):
+    def __init__(self, engine: AnalyticsEngine | None = None):
         self.engine = engine or AnalyticsEngine()
         self.con = self.engine.con
 
-    def get_datasets(self) -> List[Dict[str, Any]]:
+    def get_datasets(self) -> list[dict[str, Any]]:
         """List all allowlisted datasets with current row counts."""
         result = []
-        for d_id, meta in DATASET_REGISTRY.items():
+        for meta in DATASET_REGISTRY.values():
             count_res = self.con.execute(f"SELECT COUNT(*) FROM {meta.table_name};").fetchone()
             row_count = count_res[0] if count_res else 0
             result.append({
@@ -52,10 +51,10 @@ class ExplorerService:
         return DATASET_REGISTRY[dataset_id]
 
     def _build_where_clause(
-        self, dataset_meta: DatasetMetadata, filters: Optional[List[ExplorerFilter]], search: Optional[str]
-    ) -> Tuple[str, List[Any]]:
+        self, dataset_meta: DatasetMetadata, filters: list[ExplorerFilter] | None, search: str | None
+    ) -> tuple[str, list[Any]]:
         """Safely construct WHERE clause and parameter bindings."""
-        col_map: Dict[str, ColumnMetadata] = {c.name: c for c in dataset_meta.columns}
+        col_map: dict[str, ColumnMetadata] = {c.name: c for c in dataset_meta.columns}
         clauses = []
         params = []
 
@@ -83,13 +82,13 @@ class ExplorerService:
                     params.append(f"%{val}%")
                 elif op == ExplorerFilterOperator.IN:
                     if not isinstance(val, list) or len(val) == 0:
-                        raise ValueError(f"Operator 'in' requires a non-empty list of values.")
+                        raise ValueError("Operator 'in' requires a non-empty list of values.")
                     placeholders = ", ".join(["?" for _ in val])
                     clauses.append(f"{col} IN ({placeholders})")
                     params.extend(val)
                 elif op == ExplorerFilterOperator.NOT_IN:
                     if not isinstance(val, list) or len(val) == 0:
-                        raise ValueError(f"Operator 'not_in' requires a non-empty list of values.")
+                        raise ValueError("Operator 'not_in' requires a non-empty list of values.")
                     placeholders = ", ".join(["?" for _ in val])
                     clauses.append(f"{col} NOT IN ({placeholders})")
                     params.extend(val)
@@ -107,7 +106,7 @@ class ExplorerService:
                     params.append(val)
                 elif op == ExplorerFilterOperator.BETWEEN:
                     if not isinstance(val, list) or len(val) != 2:
-                        raise ValueError(f"Operator 'between' requires a 2-element list [start, end].")
+                        raise ValueError("Operator 'between' requires a 2-element list [start, end].")
                     clauses.append(f"{col} BETWEEN ? AND ?")
                     params.extend([val[0], val[1]])
 

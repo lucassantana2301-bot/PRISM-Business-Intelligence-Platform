@@ -2,8 +2,8 @@
 PRISM Canonical E-Commerce Domain Entities & Data Schemas
 """
 
-from dataclasses import dataclass, asdict
-from typing import Optional, List, Dict, Any
+from dataclasses import asdict, dataclass
+from typing import Any
 
 
 @dataclass
@@ -17,7 +17,7 @@ class Customer:
     customer_segment: str
     created_at: str
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
 
@@ -33,7 +33,7 @@ class Product:
     margin_rate: float
     is_active: bool
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
 
@@ -41,7 +41,7 @@ class Product:
 class Order:
     order_id: str
     customer_id: str
-    campaign_id: Optional[str]
+    campaign_id: str | None
     status: str
     subtotal: float
     discount_amount: float
@@ -53,7 +53,7 @@ class Order:
     device_type: str
     order_date: str
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
 
@@ -68,15 +68,15 @@ class OrderItem:
     total_item_revenue: float
     total_item_cost: float
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
 
 @dataclass
 class Session:
     session_id: str
-    customer_id: Optional[str]
-    campaign_id: Optional[str]
+    customer_id: str | None
+    campaign_id: str | None
     device_type: str
     browser: str
     channel: str
@@ -88,10 +88,10 @@ class Session:
     has_cart_add: bool
     has_checkout_start: bool
     is_converted: bool
-    order_id: Optional[str]
+    order_id: str | None
     session_start: str
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
 
@@ -103,9 +103,9 @@ class Campaign:
     campaign_type: str
     budget: float
     actual_spend: float
-    target_category: Optional[str]
+    target_category: str | None
     start_date: str
     end_date: str
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return asdict(self)

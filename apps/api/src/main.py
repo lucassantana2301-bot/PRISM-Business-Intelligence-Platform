@@ -5,17 +5,17 @@ Data Explorer, and Ask PRISM Conversational endpoints.
 """
 
 import uuid
-from typing import Dict, Any, List, Optional
-from fastapi import FastAPI, HTTPException, Response, Request
+
+from fastapi import FastAPI, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
 
-from .analytics.metrics import CANONICAL_METRIC_REGISTRY, DEFERRED_METRICS, MetricDefinition
-from .analytics.query_spec import AnalyticsQuery, AnalyticsQueryResult
 from .analytics.engine import AnalyticsEngine
-from .explorer.registry import DATASET_REGISTRY, DatasetMetadata
-from .explorer.query_spec import ExplorerQuery, ExplorerQueryResult, ExplorerExportQuery
-from .explorer.service import ExplorerService
+from .analytics.metrics import CANONICAL_METRIC_REGISTRY, DEFERRED_METRICS
+from .analytics.query_spec import AnalyticsQuery, AnalyticsQueryResult
 from .contracts.intent import AskPrismRequest, AskPrismResponse
+from .explorer.query_spec import ExplorerExportQuery, ExplorerQuery, ExplorerQueryResult
+from .explorer.registry import DATASET_REGISTRY, DatasetMetadata
+from .explorer.service import ExplorerService
 from .providers.intent_resolver import AskPrismEngine
 
 app = FastAPI(
@@ -33,9 +33,9 @@ app.add_middleware(
 )
 
 # Singletons
-engine: Optional[AnalyticsEngine] = None
-explorer_service: Optional[ExplorerService] = None
-ask_engine: Optional[AskPrismEngine] = None
+engine: AnalyticsEngine | None = None
+explorer_service: ExplorerService | None = None
+ask_engine: AskPrismEngine | None = None
 
 
 def get_engine() -> AnalyticsEngine:
@@ -91,10 +91,10 @@ async def query_analytics(query: AnalyticsQuery):
         result = eng.execute_query(query)
         return result
     except ValueError as ve:
-        raise HTTPException(status_code=400, detail=str(ve))
-    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(ve)) from ve
+    except Exception as exc:
         req_id = f"err-{uuid.uuid4().hex[:8]}"
-        raise HTTPException(status_code=500, detail=f"Internal analytics error [ID: {req_id}]")
+        raise HTTPException(status_code=500, detail=f"Internal analytics error [ID: {req_id}]") from exc
 
 
 # ==================== ASK PRISM CONVERSATIONAL ENDPOINT ====================
@@ -107,10 +107,10 @@ async def ask_prism_query(request: AskPrismRequest):
         response = ask_svc.process_query(request)
         return response
     except ValueError as ve:
-        raise HTTPException(status_code=400, detail=str(ve))
-    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(ve)) from ve
+    except Exception as exc:
         req_id = f"err-{uuid.uuid4().hex[:8]}"
-        raise HTTPException(status_code=500, detail=f"Ask PRISM processing error [ID: {req_id}]")
+        raise HTTPException(status_code=500, detail=f"Ask PRISM processing error [ID: {req_id}]") from exc
 
 
 # ==================== DATA EXPLORER ENDPOINTS ====================
@@ -122,7 +122,7 @@ async def get_explorer_datasets():
         svc = get_explorer_service()
         return svc.get_datasets()
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to fetch datasets: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch datasets: {str(e)}") from e
 
 
 @app.get("/api/explorer/schema/{dataset}", response_model=DatasetMetadata)
@@ -132,9 +132,9 @@ async def get_explorer_schema(dataset: str):
         svc = get_explorer_service()
         return svc.get_schema(dataset)
     except ValueError as ve:
-        raise HTTPException(status_code=404, detail=str(ve))
+        raise HTTPException(status_code=404, detail=str(ve)) from ve
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to fetch schema: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch schema: {str(e)}") from e
 
 
 @app.post("/api/explorer/query", response_model=ExplorerQueryResult)
@@ -144,10 +144,10 @@ async def query_explorer(query: ExplorerQuery):
         svc = get_explorer_service()
         return svc.execute_query(query)
     except ValueError as ve:
-        raise HTTPException(status_code=400, detail=str(ve))
-    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(ve)) from ve
+    except Exception as exc:
         req_id = f"err-{uuid.uuid4().hex[:8]}"
-        raise HTTPException(status_code=500, detail=f"Data Explorer query error [ID: {req_id}]")
+        raise HTTPException(status_code=500, detail=f"Data Explorer query error [ID: {req_id}]") from exc
 
 
 @app.post("/api/explorer/export")
@@ -162,7 +162,7 @@ async def export_explorer_csv(query: ExplorerExportQuery):
             headers={"Content-Disposition": f"attachment; filename={query.dataset}_export.csv"},
         )
     except ValueError as ve:
-        raise HTTPException(status_code=400, detail=str(ve))
-    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(ve)) from ve
+    except Exception as exc:
         req_id = f"err-{uuid.uuid4().hex[:8]}"
-        raise HTTPException(status_code=500, detail=f"Export error [ID: {req_id}]")
+        raise HTTPException(status_code=500, detail=f"Export error [ID: {req_id}]") from exc
