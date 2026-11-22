@@ -278,8 +278,8 @@ function generateDataset() {
   for (let day = 0; day < totalDays; day++) {
     const currDate = new Date(startDate.getTime() + day * 24 * 60 * 60 * 1000);
     const dStr = currDate.toISOString().slice(0, 10);
-    const month = currDate.getMonth() + 1;
-    const dayOfWeek = currDate.getDay();
+    const month = currDate.getUTCMonth() + 1;
+    const dayOfWeek = currDate.getUTCDay();
 
     while (custIndex < sortedCust.length && sortedCust[custIndex].created_at.slice(0, 10) <= dStr) {
       activeCustomers.push(sortedCust[custIndex]);
