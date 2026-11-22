@@ -24,6 +24,8 @@ Primeira versão estável.
 
 - Consultas por tempo ou dimensão que misturavam métricas de pedidos e de sessões referenciavam a tabela de
   sessões sem join; agora cada fonte é agregada separadamente e unida pelas chaves de agrupamento.
+- O dataset sintético dependia do fuso horário da máquina (`getMonth`/`getDay` locais sobre datas UTC) e mudava entre o
+  ambiente local, o CI e a Vercel; agora é idêntico em qualquer fuso.
 - Métricas sem suporte a agrupamento retornam erro claro em vez de erro de binder do DuckDB.
 - Regras novas de hooks do React 19: estado derivado sem `useEffect`, leitura do `?q=` no servidor e render puro.
 
