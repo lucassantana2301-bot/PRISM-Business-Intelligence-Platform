@@ -1,5 +1,12 @@
 # PRISM — Business Intelligence Platform
 
+[![CI](https://github.com/lucassantana2301-bot/PRISM-Business-Intelligence-Platform/actions/workflows/ci.yml/badge.svg)](https://github.com/lucassantana2301-bot/PRISM-Business-Intelligence-Platform/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/lucassantana2301-bot/PRISM-Business-Intelligence-Platform?sort=semver)](https://github.com/lucassantana2301-bot/PRISM-Business-Intelligence-Platform/releases)
+![Next.js](https://img.shields.io/badge/Next.js-16-000000?logo=nextdotjs&logoColor=white)
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
+![DuckDB](https://img.shields.io/badge/DuckDB-OLAP-FFF000?logo=duckdb&logoColor=black)
+![License](https://img.shields.io/badge/license-MIT-green)
+
 > **Tagline**: *Ask. Understand. Decide.*  
 > **Platform**: Next.js (App Router) • TypeScript • Tailwind CSS • Python • DuckDB • FastAPI • Recharts
 
@@ -137,29 +144,26 @@ PRISM enforces enterprise-grade security invariants across all interfaces:
 ## 6. Getting Started & Local Setup
 
 ### Prerequisites
-- Node.js >= 18.18 (Node 20+ recommended)
+- Node.js >= 20.9 (Node 22 recommended)
 - Python >= 3.11 (for backend Python DuckDB services)
-- npm >= 9.0
+- npm >= 10
 
 ### Installation & Execution
 
 ```bash
 # 1. Clone repository and install dependencies
-git clone https://github.com/your-username/prism-bi-platform.git
-cd "PRISM — Business Intelligence Platform"
-npm install
+git clone https://github.com/lucassantana2301-bot/PRISM-Business-Intelligence-Platform.git
+cd PRISM-Business-Intelligence-Platform
+npm ci
 
-# 2. Run Quality Gates & Full Verification Matrix
-npm run test:ask
-npm run test:visualization
-npm run test:voice
-npm run test:insights
-npm run test:data-providers
-npm run test:hardening
-npm run typecheck
-npm run lint
+# 2. Generate the deterministic synthetic dataset (seeded PRNG)
+npm run generate:data
 
-# 3. Launch the Local Development Server
+# 3. Run the same quality gates as CI
+npm run lint && npm run typecheck && npm test && npm run build
+(cd apps/api && pip install -r requirements.txt && ruff check . && pytest)
+
+# 4. Launch the Local Development Server
 npm run dev
 ```
 
@@ -208,3 +212,11 @@ npm run build
   - Zero dynamic `eval()` or unsanitized JavaScript rendering in charts.
   - Statistical anomaly detection completely isolated from test ground truth.
   - Sub-100ms analytical aggregation over hundreds of thousands of sessions.
+
+---
+
+## 9. Contributing, Changelog & License
+
+- [Contributing guide](CONTRIBUTING.md) — branch flow, Conventional Commits and the automated release process.
+- [Changelog](CHANGELOG.md) and [security policy](SECURITY.md).
+- Licensed under the [MIT License](LICENSE).
